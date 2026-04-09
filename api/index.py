@@ -49,9 +49,16 @@ if supabase_url and supabase_key:
         supabase = None
 
 
-remote_db = os.environ.get('DATABASE_URL')
+remote_db = (
+    os.environ.get('DATABASE_URL')
+    or os.environ.get('POSTGRES_URL')
+    or os.environ.get('POSTGRES_PRISMA_URL')
+    or os.environ.get('POSTGRES_URL_NON_POOLING')
+)
 if not remote_db:
-    raise RuntimeError("DATABASE_URL is required. Configure your Supabase/Postgres connection in .env.")
+    raise RuntimeError(
+        "Database URL is missing. Set DATABASE_URL or POSTGRES_URL in environment variables."
+    )
 
 if remote_db.startswith("postgres://"):
     remote_db = remote_db.replace("postgres://", "postgresql://", 1)
@@ -59,12 +66,7 @@ if remote_db.startswith("postgres://"):
 if not remote_db.startswith("postgresql://"):
     raise RuntimeError("DATABASE_URL must be a PostgreSQL connection string.")
 
-try:
-    connection = psycopg2.connect(remote_db)
-    connection.close()
-    print("PostgreSQL connection verified.")
-except Exception as exc:
-    raise RuntimeError(f"DATABASE_URL unavailable: {exc}") from exc
+print("PostgreSQL configuration detected.")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = remote_db
 
