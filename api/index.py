@@ -5,7 +5,7 @@ from io import StringIO
 from flask import Response
 from datetime import datetime, timedelta
 from uuid import uuid4
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, render_template_string, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -15,7 +15,7 @@ from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv 
 import psycopg2
 from supabase import create_client
-from jinja2 import ChoiceLoader, FileSystemLoader
+from jinja2 import ChoiceLoader, FileSystemLoader, TemplateNotFound
 
 load_dotenv() 
 os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -294,7 +294,37 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    return render_template('public/index.html', pets=Pet.query.filter_by(status="Available").all())
+        pets = Pet.query.filter_by(status="Available").all()
+        try:
+                return render_template('public/index.html', pets=pets)
+        except TemplateNotFound as exc:
+                print(f"Template missing at runtime: {exc}. Search dirs: {template_dirs}")
+                return render_template_string(
+                        """
+                        <!doctype html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="utf-8" />
+                            <meta name="viewport" content="width=device-width, initial-scale=1" />
+                            <title>PetAdopt</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; margin: 40px; color: #1f2937; }
+                                .card { max-width: 760px; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; }
+                                a { color: #0369a1; text-decoration: none; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="card">
+                                <h1>PetAdopt is running</h1>
+                                <p>Homepage template is missing in the deployment package.</p>
+                                <p>Available pets in database: <strong>{{ pet_count }}</strong></p>
+                                <p><a href="/admin/login">Go to Admin Login</a></p>
+                            </div>
+                        </body>
+                        </html>
+                        """,
+                        pet_count=len(pets),
+                )
 
 @app.route('/adopt/<int:pet_id>', methods=['GET', 'POST'])
 def adopt(pet_id):
