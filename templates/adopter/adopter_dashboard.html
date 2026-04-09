@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Adoptions | PetAdopt Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root { 
+            --primary-navy: #1a2a3a; 
+            --accent-gold: #c5a059; 
+            --bg-dashboard: #fdfdfb; 
+            --border-light: rgba(0,0,0,0.06);
+        }
+
+        .bg-navy { 
+            background-color: var(--primary-navy) !important; 
+            color: white; 
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dashboard); color: #333; }
+        h2, h5 { font-family: 'Playfair Display', serif; }
+
+        /* Navigation */
+        .nav-adopter { background: #fff; border-bottom: 1px solid var(--border-light); padding: 18px 0; }
+        .portal-logo { letter-spacing: 2px; font-weight: 700; color: var(--primary-navy); text-decoration: none; }
+
+        /* Adoption Cards */
+        .card-request { 
+            border: 1px solid var(--border-light); 
+            border-radius: 0; 
+            background: #fff; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border-left: 5px solid var(--primary-navy); 
+        }
+        
+        .card-request:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.06) !important;
+        }
+
+        /* Dynamic Status Accents */
+        /* Update these to match the badges */
+        .status-approved { border-left-color: #198754 !important; } /* Success Green */
+        .status-pending { border-left-color: #ffc107 !important; }  /* Warning Yellow */
+        .status-declined { border-left-color: #dc3545 !important; }  /* Danger Red */
+        .status-claimed { border-left-color: #0d6efd !important; }   /* Primary Blue */
+
+        /* Typography & Badges */
+        .status-badge { 
+            font-size: 0.65rem; 
+            letter-spacing: 1.5px; 
+            text-transform: uppercase; 
+            padding: 6px 14px; 
+            border-radius: 0; 
+            font-weight: 600;
+        }
+        
+        .pet-img-sm { 
+            width: 90px; height: 90px; 
+            object-fit: cover; 
+            border: 1px solid var(--border-light);
+            padding: 4px;
+            background: #fff;
+        }
+
+        .text-id { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); font-weight: 600; }
+
+        /* Sidebar Styling */
+        .stats-card { background: var(--primary-navy); color: white; border: none; border-radius: 0; }
+        .protocol-box { background: #f0e6d2; border: none; border-radius: 0; }
+
+        /* Buttons */
+        .btn-navy { background: var(--primary-navy); color: white; border-radius: 0; font-weight: 600; }
+        .btn-navy:hover { background: #2c3e50; color: white; }
+
+        .italic { font-style: italic; }
+
+
+        @media (max-width: 991px) {
+    /* Stack the main column and the sidebar */
+    .col-lg-8, .col-lg-4 {
+        width: 100% !important;
+    }
+    
+    /* Center the page headers on mobile */
+    h2.fw-bold {
+        font-size: 1.6rem !important;
+        text-align: center;
+        margin-bottom: 1.5rem !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .card-request {
+        padding: 1.25rem !important;
+    }
+    
+    /* Stack the two halves of the card */
+    .card-request .row.align-items-center {
+        flex-direction: column;
+    }
+
+    .card-request .col-md-8, 
+    .card-request .col-md-4 {
+        width: 100% !important;
+        text-align: left !important;
+    }
+
+    /* Add spacing between the info and the status/form */
+    .card-request .col-md-4 {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #eee;
+    }
+
+    /* Make pet badges larger for easier tapping */
+    .card-request .d-flex.gap-2 {
+        justify-content: flex-start;
+    }
+}
+
+
+
+@media (max-width: 576px) {
+    /* Adjust Navbar for mobile */
+    .nav-adopter .container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .portal-logo {
+        font-size: 1rem;
+    }
+
+    /* Make modal images fit better */
+    #fullSizeImage {
+        max-height: 70vh;
+        width: 100%;
+        object-fit: contain;
+    }
+
+}
+    </style>
+</head>
+<body>
+<body> <nav id="main-header" class="nav-adopter bg-white border-bottom shadow-sm py-3 fixed-top" 
+     style="border-bottom: 2px solid #c5a059 !important;"z-index: 1060; transition: transform 0.3s ease-in-out;">
+    <div class="container d-flex justify-content-between align-items-center">
+        
+        <a href="/" class="portal-logo font-playfair">PETADOPT <span style="color: var(--accent-gold);">PORTAL</span></a>
+        
+        <div class="d-flex align-items-center">
+            
+            <div class="d-none d-md-flex align-items-center gap-2 me-3 pe-3 border-end border-2">
+                <div class="bg-light border d-flex align-items-center justify-content-center rounded-circle text-navy fw-bold shadow-sm" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                    {{ user.full_name[:1]|upper }}
+                </div>
+                <div class="text-start" style="line-height: 1.1;">
+                    <span class="d-block fw-bold text-navy" style="font-size: 0.85rem;">{{ user.full_name }}</span>
+                    <span class="text-uppercase text-muted fw-semibold" style="font-size: 0.6rem; letter-spacing: 1px;">Guardian Account</span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a class="btn rounded-1 px-3 py-2 fw-bold text-uppercase d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+                style="background-color: white; color: var(--primary-navy); border: 1px solid #dcdcdc; font-size: 0.75rem; letter-spacing: 1px; transition: all 0.3s ease;" 
+                onmouseover="this.style.borderColor='var(--primary-navy)'; this.style.backgroundColor='#f8f9fa';"
+                onmouseout="this.style.borderColor='#dcdcdc'; this.style.backgroundColor='white';"
+                href="/profile">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Settings
+                </a>
+                    <a class="btn rounded-1 px-3 py-2 fw-bold text-uppercase d-flex align-items-center justify-content-center gap-2" 
+                    style="background-color: transparent; color: var(--primary-navy); border: 1px solid #dcdcdc; font-size: 0.75rem; letter-spacing: 1px; transition: all 0.3s ease;" 
+                    onmouseover="this.style.backgroundColor='#fff5f5'; this.style.color='#dc3545'; this.style.borderColor='#dc3545';"
+                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--primary-navy)'; this.style.borderColor='#dcdcdc';"
+                    href="/logout">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav> <div style="height: 80px; width: 100%;"></div>
+
+<div class="mt-5"></div>
+
+<div class="container pb-5">
+    <div class="row">
+        <div class="col-lg-8">
+            
+            <div class="mb-4 pb-3 border-bottom border-light-subtle">
+                <h2 class="fw-bold mb-1 family-playfair text-navy">Your Adoption Journey</h2>
+                <p class="text-muted small mb-0">Track your active applications and manage your new companions.</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% set alert_class = 'primary' %}
+                        {% if category in ['error', 'danger'] %}{% set alert_class = 'danger' %}{% endif %}
+                        {% if category == 'success' %}{% set alert_class = 'success' %}{% endif %}
+                        
+                        <div class="alert alert-{{ alert_class }} bg-{{ alert_class }} bg-opacity-10 border-0 border-start border-4 border-{{ alert_class }} rounded-3 mb-4 shadow-sm d-flex align-items-center p-3">
+                            <span class="small fw-bold text-dark">{{ message }}</span>
+                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" style="font-size: 0.7rem;"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+{% if requests %}
+    {% for app in requests %}
+    <div class="card shadow-sm mb-4 border-0" style="border-radius: 8px; border: 1px solid #eaeaea !important; background-color: white;">
+        <div class="card-body p-4 p-md-5">
+            <div class="row align-items-center">
+                
+                <div class="col-md-7 border-md-end pe-md-4 mb-4 mb-md-0">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h5 class="fw-bold mb-0 text-navy family-playfair">Application #{{ app.id }}</h5>
+                        
+                        <span class="badge text-uppercase d-inline-flex align-items-center rounded-1 px-2 py-1
+    {% if app.status == 'Approved' %}bg-success bg-opacity-10 text-success border border-success border-opacity-25
+    {% elif app.status == 'Pending' %}bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50
+    {% elif app.status == 'Declined' %}bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25
+    {% elif app.status == 'Claimed' %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25
+    {% else %}bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25{% endif %}" 
+    style="font-size: 0.65rem; letter-spacing: 1px; font-weight: 700;">
+    
+    <span class="me-1" style="font-size: 0.5rem; line-height: 1;">&#9679;</span>
+    {{ app.status }}
+</span>
+                    </div>
+                    <p class="text-muted mb-4" style="font-size: 0.75rem;">Submitted on {{ app.application_date.strftime('%B %d, %Y') }}</p>
+                    
+                    <div class="d-flex flex-column gap-2 mb-4">
+                        {% for item in app.items %}
+                        <div class="d-flex align-items-center p-2 rounded" 
+                             style="background-color: #f8f9fa; cursor: pointer; transition: all 0.2s ease;" 
+                             onmouseover="this.style.backgroundColor='#ffffff'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'" 
+                             onmouseout="this.style.backgroundColor='#f8f9fa'; this.style.boxShadow='none'"
+                             data-bs-toggle="modal" data-bs-target="#petDetailModal{{ item.pet.id }}">
+                            <img src="{{ url_for('static', filename='uploads/' + item.pet.photo) }}" 
+                                 class="rounded-1 me-3" style="width: 40px; height: 40px; object-fit: cover; border: 1px solid #e0e0e0;">
+                            <div class="flex-grow-1">
+                                <span class="fw-bold text-navy d-block" style="font-size: 0.85rem; line-height: 1.2;">{{ item.pet.name }}</span>
+                                <span class="text-muted" style="font-size: 0.7rem;">View Record &rarr;</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="button" class="btn btn-sm btn-outline-dark rounded-1 fw-bold w-100" style="font-size: 0.7rem; letter-spacing: 1px;" data-bs-toggle="modal" data-bs-target="#viewResponseModal{{ app.id }}">
+                        VIEW SUBMITTED FILE
+                    </button>
+                </div>
+                
+                <div class="col-md-5 ps-md-4 d-flex flex-column justify-content-center text-center text-md-start">
+                    
+                    {% if app.status == 'Approved' %}
+                        <div>
+                            <h6 class="fw-bold text-navy text-uppercase mb-2" style="font-size: 0.7rem; letter-spacing: 1px;">Schedule Pickup</h6>
+                            <p class="text-muted mb-3" style="font-size: 0.75rem; line-height: 1.4;">Select an available date and time to finalize the adoption at the sanctuary.</p>
+                            <form action="{{ url_for('schedule_pickup', app_id=app.id) }}" method="POST">
+                                <input type="datetime-local" name="pickup_date" 
+                                       class="form-control form-control-sm mb-2 rounded-1 border-secondary border-opacity-25 shadow-none" 
+                                       value="{{ app.pickup_date.strftime('%Y-%m-%dT%H:%M') if app.pickup_date }}" required>
+                                <button class="btn btn-sm w-100 fw-bold rounded-1 shadow-sm" style="font-size: 0.75rem; background-color: var(--accent-gold); color: white; border: none; letter-spacing: 1px;">
+                                    {% if app.pickup_date %}UPDATE APPOINTMENT{% else %}CONFIRM APPOINTMENT{% endif %}
+                                </button>
+                            </form>
+                        </div>
+
+                    {% elif app.status == 'Claimed' %}
+                        <div class="text-center p-3 rounded-1 mt-2" style="background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%); border: 1px dashed #dcdcdc;">
+                            <svg width="28" height="28" fill="none" stroke="var(--accent-gold)" stroke-width="1.5" class="mb-2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                            </svg>
+                            
+                            <p class="fw-bold text-navy mb-1" style="font-size: 0.85rem; letter-spacing: 1.5px;">ADOPTION FINALIZED</p>
+                            
+                            <p class="text-muted mb-0" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px;">
+                                Record Permanently Archived
+                            </p>
+                        </div>
+
+                    {% elif app.status == 'Pending' %}
+                        <div class="text-center">
+                            <p class="fw-bold text-navy mb-1" style="font-size: 0.85rem; letter-spacing: 0.5px;">UNDER REVIEW</p>
+                            <p class="text-muted mb-0" style="font-size: 0.75rem;">Sanctuary staff is currently verifying your details.</p>
+                        </div>
+
+                    {% elif app.status == 'Declined' %}
+                        <div class="text-center text-md-start">
+                            <p class="fw-bold text-danger mb-1" style="font-size: 0.85rem; letter-spacing: 0.5px;">APPLICATION CLOSED</p>
+                            <p class="text-muted mb-0" style="font-size: 0.75rem; line-height: 1.4;">{{ app.admin_remarks or 'Requirements for this companion were not met.' }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center py-5 bg-white shadow-sm mb-5" style="border-radius: 8px; border: 1px solid #eaeaea;">
+        <p class="text-muted fw-medium mb-4">You have no active adoption files.</p>
+        <a href="/#pets" class="btn rounded-1 px-5 py-2 fw-bold text-white shadow-sm" style="font-size: 0.8rem; letter-spacing: 1px; background-color: var(--primary-navy);">BROWSE COMPANIONS</a>
+    </div>
+{% endif %}
+</div>
+
+<div class="col-lg-4">
+    <div class="d-grid gap-2 mb-4">
+        <a href="/" class="btn shadow-sm rounded-1 d-flex align-items-center justify-content-center" style="background: var(--accent-gold); color: white; padding: 12px; font-weight: 600; font-size: 0.8rem; letter-spacing: 1px; text-decoration: none;">
+            RETURN TO GALLERY
+        </a>
+    </div>  
+
+    <div class="card p-4 bg-white rounded-1 shadow-sm mb-4" style="border: 1px solid #eaeaea;">
+        <h6 class="text-uppercase small fw-bold mb-4 border-bottom pb-2 text-navy" style="letter-spacing: 1px;">Guardian Insights</h6>
+        
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <span class="small fw-medium text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Total Applications</span>
+            <span class="fw-bold fs-5 lh-1 text-navy">{{ requests|length }}</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <span class="small fw-medium text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Finalized Adoptions</span>
+            <span class="fw-bold fs-5 lh-1" style="color: var(--accent-gold);">{{ requests|selectattr('status', 'in', ['Claimed'])|list|length }}</span>
+        </div>
+    </div>
+
+    <div class="card p-4 bg-white rounded-1 shadow-sm" style="border: 1px solid #eaeaea;">
+        <h6 class="fw-bold text-uppercase small mb-3 text-navy" style="letter-spacing: 1px;">
+            Sanctuary Protocol
+        </h6>
+        <div class="small text-muted mb-3" style="line-height: 1.5;">
+            <strong class="text-navy">1. Verification</strong><br>
+            Staff reviews submitted documentation within 24-72 hours.
+        </div>
+        <div class="small text-muted" style="line-height: 1.5;">
+            <strong class="text-navy">2. Appointments</strong><br>
+            You can visit our office once your digital status reflects "Approved".
+        </div>
+    </div>
+</div>
+</div>
+</div>
+
+{% if requests %}
+    {% for app in requests %}
+    <div class="modal fade" id="viewResponseModal{{ app.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-1 border-0 shadow-lg">
+                
+                <div class="modal-header bg-light border-bottom p-4">
+                    <div>
+                        <span class="badge border border-secondary text-secondary mb-2 px-2 py-1 text-uppercase" style="font-size: 0.6rem; letter-spacing: 1px;">
+                            Official Record Log
+                        </span>
+                        <h4 class="fw-bold mb-0 font-playfair text-navy">Application File #{{ app.id }}</h4>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body p-0 text-start bg-white">
+                    <div class="row g-0">
+                        
+                        <div class="col-md-6 border-end border-light-subtle">
+                            <div class="p-4 h-100">
+                                
+                                <h6 class="small fw-bold text-uppercase text-navy border-bottom pb-2 mb-3" style="letter-spacing: 1px;">
+                                I. Adopter Profile
+                                </h6>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-12">
+                                        <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Full Name</span>
+                                        <span class="fw-bold text-dark small">{{ app.adopter_name }}</span>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Email</span>
+                                        <span class="fw-bold text-dark small text-break">{{ app.email }}</span>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Phone</span>
+                                        <span class="fw-bold text-dark small">{{ app.phone }}</span>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Current Occupation</span>
+                                        <span class="fw-bold text-dark small">{{ app.occupation }}</span>
+                                    </div>
+                                </div>
+
+                                <h6 class="small fw-bold text-uppercase text-navy border-bottom pb-2 mb-3 mt-4" style="letter-spacing: 1px;">
+                                    II. Environment
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Residence</span>
+                                        <span class="fw-bold text-dark small">{{ app.q_home_type }}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Household</span>
+                                        <span class="fw-bold text-dark small">{{ app.household_size }} Person(s)</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Yard Access</span>
+                                        <span class="fw-bold text-dark small">{{ app.q_yard_access }}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Hours Alone</span>
+                                        <span class="fw-bold text-dark small">{{ app.q_hours_alone }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 bg-light">
+                            <div class="p-4 h-100">
+                                
+                                <h6 class="small fw-bold text-uppercase text-navy border-bottom border-secondary border-opacity-25 pb-2 mb-3" style="letter-spacing: 1px;">
+                                    III. History & Capability
+                                </h6>
+                                <div class="p-3 bg-white border rounded-0 mb-3 shadow-sm">
+                                    <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-light-subtle">
+                                        <span class="text-muted small">Other Pets at Home:</span>
+                                        <span class="fw-bold small text-navy">{{ app.other_pets }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-light-subtle">
+                                        <span class="text-muted small">Financial Readiness:</span>
+                                        <span class="fw-bold small text-navy">{{ app.financial_readiness }}</span>
+                                    </div>
+                        
+
+                                <div class="p-3 bg-white border rounded-0 mb-4 shadow-sm">
+                                    <span class="d-block text-navy fw-bold small mb-2 border-bottom pb-1 text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">Detailed Pet Experience</span>
+                                    <p class="small text-muted italic mb-0" style="line-height: 1.5;">"{{ app.q_pet_experience or 'No detailed history provided.' }}"</p>
+                                </div>
+
+                                <h6 class="small fw-bold text-uppercase text-navy border-bottom border-secondary border-opacity-25 pb-2 mb-3" style="letter-spacing: 1px;">
+                                    IV. Attached Documents
+                                </h6>
+                                <div class="d-grid gap-2">
+                                    {% if app.id_proof %}
+                                        <button type="button" onclick="openImageViewer('{{ url_for('static', filename='uploads/' + app.id_proof) }}')" class="btn btn-outline-dark rounded-0 w-100 text-start d-flex justify-content-between align-items-center bg-white" style="border-color: #dcdcdc;">
+                                            <span class="small fw-bold text-dark text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">View Government ID</span>
+                                            <span class="text-muted">&rarr;</span>
+                                        </button>
+                                    {% endif %}
+                                    
+                                    {% if app.home_picture %}
+                                        <button type="button" onclick="openImageViewer('{{ url_for('static', filename='uploads/' + app.home_picture) }}')" class="btn btn-outline-dark rounded-0 w-100 text-start d-flex justify-content-between align-items-center bg-white mt-1" style="border-color: #dcdcdc;">
+                                            <span class="small fw-bold text-dark text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">View Home Environment</span>
+                                            <span class="text-muted">&rarr;</span>
+                                        </button>
+                                    {% endif %}
+                                    
+                                    {% if not app.id_proof and not app.home_picture %}
+                                        <div class="p-3 bg-white border rounded-0 text-center">
+                                            <span class="text-muted small italic">No digital attachments provided.</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<div class="modal fade" id="imageViewerModal" tabindex="-1" style="z-index: 1060;" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 bg-transparent">
+            <div class="modal-header border-0 d-flex justify-content-center pb-0">
+                <button type="button" class="btn btn-light rounded-0 px-4 py-2 fw-bold shadow-sm text-uppercase" data-bs-dismiss="modal" style="letter-spacing: 1px; color: var(--primary-navy); font-size: 0.75rem;">
+                    &times; Exit Image
+                </button>
+            </div>
+            <div class="modal-body text-center pt-3">
+                <img id="fullSizeImage" src="" class="img-fluid rounded-0 shadow-lg" style="max-height: 80vh; border: 4px solid white;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function openImageViewer(imageSrc) {
+    document.getElementById('fullSizeImage').src = imageSrc;
+    var imageModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
+    imageModal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInputs = document.querySelectorAll('input[type="datetime-local"]');
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const minDateTime = now.toISOString().slice(0, 16);
+    
+    dateInputs.forEach(input => {
+        input.setAttribute('min', minDateTime);
+        
+        input.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const day = selectedDate.getDay(); 
+            const hours = selectedDate.getHours();
+            
+            if (day === 0) {
+                alert("The Sanctuary is closed on Sundays. Please select a Monday to Saturday.");
+                this.value = "";
+                return;
+            }
+            
+            if (hours < 9 || hours >= 16) {
+                alert("Please schedule appointments between our operating hours: 9:00 AM to 4:00 PM.");
+                this.value = "";
+                return;
+            }
+        });
+    });
+});
+</script>
+
+    {% if requests %}
+        {% for app in requests %}
+        {% for item in app.items %}
+<div class="modal fade" id="petDetailModal{{ item.pet.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-1 border-0 shadow-lg">
+            
+            <div class="modal-header bg-light border-bottom p-4">
+                <div>
+                    <span class="badge border border-secondary text-secondary mb-2 px-2 py-1 text-uppercase" style="font-size: 0.6rem; letter-spacing: 1px;">
+                        Companion Registry
+                    </span>
+                    <h4 class="fw-bold mb-0 font-playfair text-navy">{{ item.pet.name }}</h4>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-0 text-start bg-white">
+                <div class="row g-0">
+                    
+                    <div class="col-md-5 border-end border-light-subtle bg-light">
+                        <div class="p-4 d-flex flex-column align-items-center justify-content-center h-100">
+                            <div class="border shadow-sm p-2 bg-white mb-3" style="width: 100%; border-color: #dcdcdc !important;">
+                                <img src="{{ url_for('static', filename='uploads/' + item.pet.photo) }}" 
+                                     class="img-fluid rounded-0 w-100" 
+                                     style="max-height: 280px; object-fit: cover;">
+                            </div>
+                            <p class="x-small text-muted mb-0 text-uppercase fw-bold" style="letter-spacing: 1.5px;">Registry ID: #PET-{{ item.pet.id }}</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-7">
+                        <div class="p-4 h-100">
+                            
+                            <h6 class="small fw-bold text-uppercase text-navy border-bottom border-secondary border-opacity-25 pb-2 mb-3" style="letter-spacing: 1px;">
+                                I. Biological Data
+                            </h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Breed / Lineage</span>
+                                    <span class="fw-bold text-dark small">{{ item.pet.breed }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Gender</span>
+                                    <span class="fw-bold text-dark small">{{ item.pet.gender }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Age Category</span>
+                                    <span class="fw-bold text-dark small">{{ item.pet.age_category }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Size</span>
+                                    <span class="fw-bold text-dark small">{{ item.pet.size }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="d-block text-muted" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Energy Level/Temperament</span>
+                                    <span class="fw-bold text-dark small">{{ item.pet.energy_level }}</span>
+                                </div>
+                            </div>
+
+                            <h6 class="small fw-bold text-uppercase text-navy border-bottom border-secondary border-opacity-25 pb-2 mb-3 mt-4" style="letter-spacing: 1px;">
+                                II. Medical & History
+                            </h6>
+                            <div class="p-3 bg-white border rounded-0 mb-3 shadow-sm">
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-light-subtle">
+                                    <span class="text-muted small">Vaccination Status:</span>
+                                    <span class="fw-bold small text-navy">{{ item.pet.vac_status }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-light-subtle">
+                                    <span class="text-muted small">Vaccination Date:</span>
+                                    <span class="fw-bold small text-navy">{{ item.pet.vac_date or 'N/A' }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-light-subtle">
+                                    <span class="text-muted small">Spayed / Neutered:</span>
+                                    <span class="fw-bold small text-navy">{{ item.pet.spayed_neutered }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted small">Special Needs:</span>
+                                    <span class="fw-bold small {% if item.pet.special_needs and item.pet.special_needs != 'None' and item.pet.special_needs != 'N/A' %}text-danger-emphasis{% else %}text-navy{% endif %}">{{ item.pet.special_needs }}</span>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-white border rounded-0 shadow-sm">
+                                <span class="d-block text-navy fw-bold small mb-2 border-bottom pb-1 text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">Sanctuary Notes</span>
+                                <p class="small text-muted italic mb-0" style="line-height: 1.5;">"{{ item.pet.other_description or 'No additional history provided for this record.' }}"</p>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer border-top bg-light p-3">
+                <button type="button" class="btn btn-outline-dark rounded-0 fw-bold px-4 text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;" data-bs-dismiss="modal">Close Record</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endfor %}
+{% endif %}   
+
+<script>
+    let lastScrollTop = 0;
+    const header = document.getElementById('main-header');
+
+    window.addEventListener('scroll', function() {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // If scrolling down and we've moved at least 100px
+        if (scrollTop > lastScrollTop && scrollTop > 100) {
+            header.classList.add('header-hidden');
+        } 
+        // If scrolling up
+        else {
+            header.classList.remove('header-hidden');
+        }
+        
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; 
+    }, false);
+</script>
+
+</body>
+</html>

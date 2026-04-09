@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if mode == 'forgot' %}Recover Key{% elif mode == 'login' %}Login{% else %}Register{% endif %} | PetAdopt Portal
+    </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary-navy: #1a2a3a; 
+            --accent-gold: #c5a059;
+            --accent-hover: #896b35;
+            --bg-cream: #fdfdfb;
+        }
+        
+        body { 
+            background-color: var(--bg-cream); 
+            font-family: 'Inter', sans-serif; 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-card { 
+            max-width: 480px; 
+            width: 100%;
+            background: white; 
+            padding: 40px; 
+            border-radius: 20px;
+            border-top: 5px solid var(--accent-gold);
+            box-shadow: 0 15px 35px rgba(26, 42, 58, 0.08);
+        }
+
+        h2 { 
+            font-family: 'Playfair Display', serif; 
+            color: var(--primary-navy); 
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            letter-spacing: -1px;
+        }
+
+        .btn-google { 
+            background: white; 
+            border: 1px solid #dfe6e9; 
+            color: #555; 
+            font-weight: 600; 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .btn-google:hover { 
+            background: #f8f9fa; 
+            border-color: #ced4da;
+            transform: translateY(-1px);
+        }
+
+        .divider { 
+            display: flex; 
+            align-items: center; 
+            text-align: center; 
+            margin: 25px 0; 
+        }
+
+        .divider::before, .divider::after { 
+            content: ''; 
+            flex: 1; 
+            border-bottom: 1px solid #eee; 
+        }
+
+        .divider span { 
+            padding: 0 10px; 
+            color: #999; 
+            font-size: 0.6rem; 
+            letter-spacing: 1.5px; 
+            font-weight: 700; 
+        }
+        
+        .form-label { 
+            font-size: 0.65rem; 
+            font-weight: 700; 
+            letter-spacing: 0.8px; 
+            color: var(--primary-navy);
+            opacity: 0.8;
+            margin-bottom: 6px;
+        }
+
+        .form-control { 
+            border-radius: 10px; 
+            padding: 12px; 
+            border: 1px solid #f0f0f0; 
+            background-color: #fbfbfb;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus { 
+            border-color: var(--accent-gold); 
+            background-color: white;
+            box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.1);
+        }
+        
+        .btn-auth { 
+            background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%);
+            color: white;
+            border: none; 
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 0.85rem;
+        }
+
+        .btn-auth:hover { 
+            background: linear-gradient(135deg, #c5a059 0%, #d4af37 100%);
+            color: var(--primary-navy);
+            transform: translateY(-2px);
+        }
+
+        .back-link { 
+            display: inline-block;
+            margin-top: 20px; 
+            font-size: 0.65rem; 
+            text-decoration: none; 
+            color: #999; 
+            font-weight: 700;
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+
+        .back-link:hover { color: var(--accent-gold); }
+
+        @media (max-width: 576px) {
+            .auth-card { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-card">
+    <div class="text-center mb-4">
+        <h2 class="mb-1">
+            {% if mode == 'forgot' %}Recover Security Key
+            {% elif mode == 'login' %}Welcome Back
+            {% else %}Join PetAdopt{% endif %}
+        </h2>
+        <p class="text-muted small ls-1 text-uppercase fw-bold" style="font-size: 0.55rem; opacity: 0.6;">
+            Standard Guardian Access
+        </p>
+    </div>
+
+    {% if mode != 'forgot' %}
+    <a href="{{ url_for('google_login') }}" class="btn btn-google d-flex align-items-center justify-content-center gap-2 shadow-sm">
+        <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" width="16" alt="Google Logo"> 
+        <span>Continue with Google</span>
+    </a>
+    <div class="divider"><span>OR USE EMAIL</span></div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} rounded-3 x-small border-0 shadow-sm mb-4 py-2 px-3" style="font-size: 0.75rem;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        {% if mode == 'forgot' %}
+            <div class="mb-4">
+                <label class="form-label text-uppercase">Email Address</label>
+                <input type="email" name="email" class="form-control" placeholder="juan@email.com" required>
+                <div class="form-text x-small mt-2" style="font-size: 0.65rem;">We will send a reset link to this address if it is registered.</div>
+            </div>
+            <button type="submit" class="btn btn-auth w-100 shadow-sm">SEND RESET LINK</button>
+            <div class="text-center mt-3">
+                <a href="{{ url_for('adopter_login') }}" class="small text-muted text-decoration-none fw-bold" style="font-size: 0.7rem;">← BACK TO LOGIN</a>
+            </div>
+
+        {% else %}
+            {% if mode == 'register' %}
+            <div class="mb-3">
+                <label class="form-label text-uppercase">Full Legal Name</label>
+                <input type="text" name="name" class="form-control" placeholder="Juan Dela Cruz" required>
+            </div>
+            {% endif %}
+            
+            <div class="mb-3">
+                <label class="form-label text-uppercase">Email Address</label>
+                <input type="email" name="email" class="form-control" placeholder="juan@email.com" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label text-uppercase">Password</label>
+                <div class="input-group">
+                    <input type="password" name="password" class="form-control border-end-0" placeholder="••••••••" required>
+                    <button class="btn btn-outline-secondary border-start-0" 
+                            type="button" 
+                            onclick="togglePassword(this)" 
+                            style="background: #fbfbfb; border-color: #f0f0f0; font-size: 0.65rem; font-weight: 800; color: var(--accent-gold);">
+                        SHOW
+                    </button>
+                </div>
+            </div>
+
+            {% if mode == 'login' %}
+            <div class="text-end mb-4">
+                <a href="{{ url_for('forgot_password') }}" 
+                   class="forgot-link fw-bold text-decoration-none" 
+                   style="color: var(--accent-gold); font-size: 0.75rem;">
+                    Forgot Security Key?
+                </a>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-auth w-100 shadow-sm mt-2">
+                {{ 'LOGIN TO PORTAL' if mode == 'login' else 'CREATE ACCOUNT' }}
+            </button>
+        {% endif %}
+    </form>
+
+    <div class="text-center mt-4">
+        {% if mode == 'login' %}
+            <p class="small text-muted mb-1">New here? <a href="{{ url_for('adopter_register') }}" style="color: var(--accent-gold); font-weight: 700; text-decoration: none;">Create account</a></p>
+        {% elif mode == 'register' %}
+            <p class="small text-muted mb-1">Already registered? <a href="{{ url_for('adopter_login') }}" style="color: var(--accent-gold); font-weight: 700; text-decoration: none;">Log in</a></p>
+        {% endif %}
+        <a href="/" class="back-link">← Return to Gallery</a>
+    </div>
+</div>
+
+<script>
+    function togglePassword(button) {
+        const input = button.parentElement.querySelector('input');
+        if (input.type === "password") {
+            input.type = "text";
+            button.textContent = "HIDE";
+        } else {
+            input.type = "password";
+            button.textContent = "SHOW";
+        }
+    }
+</script>
+
+</body>
+</html>

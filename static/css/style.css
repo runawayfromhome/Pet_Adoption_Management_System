@@ -1,0 +1,742 @@
+/* --- CSS Variables & Root --- */
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #a29bfe;
+    --accent-color: #ff7675;
+    --accent-gold: #D4AF37; 
+    --primary-navy: #1a2a3a;
+    --navy-dark: #2c3e50;
+    --bg-color: #f9f9fb;
+    --white: #ffffff;
+}
+
+html {
+    overflow-y: scroll !important;
+}
+
+/* --- General Styles --- */
+body {
+    background-color: var(--bg-color);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #2d3436;
+    line-height: 1.6;
+}
+
+/* --- Navigation --- */
+.navbar {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #eee;
+    padding: 1rem 0;
+}
+
+/* --- Component: Cards --- */
+.card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(108, 92, 231, 0.12);
+}
+
+/* --- Component: Buttons --- */
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #5b4bc4;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+}
+
+.btn-gold-outline {
+    display: inline-block;
+    color: var(--accent-gold) !important;
+    border: 2px solid var(--accent-gold) !important;
+    background-color: transparent;
+    padding: 10px 25px;
+    border-radius: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-gold-outline:hover {
+    background-color: var(--accent-gold);
+    color: var(--white) !important;
+    box-shadow: 0 8px 15px rgba(212, 175, 55, 0.3);
+    transform: translateY(-3px);
+}
+
+/* --- Forms & Badges --- */
+.form-control {
+    border-radius: 10px;
+    border: 1px solid #dfe6e9;
+    padding: 12px;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+}
+
+.bg-navy {
+    background-color: var(--navy-dark) !important;
+    color: #ffffff !important;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.bg-gold {
+    background-color: var(--accent-gold) !important;
+    color: #ffffff !important;
+}
+
+/* --- Modern Tab Styling Fix --- */
+#inventoryTabs .nav-link {
+    background-color: #f8f9fa;
+    color: #495057 !important; /* Fixed visibility for inactive tabs */
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+    border-radius: 0;
+    transition: all 0.2s ease-in-out;
+    padding: 12px 24px;
+    font-weight: 600;
+}
+
+#inventoryTabs .nav-link:hover:not(.active) {
+    background-color: #e9ecef;
+    color: var(--primary-navy) !important;
+    border-bottom: 3px solid rgba(197, 160, 89, 0.4); 
+}
+
+#inventoryTabs .nav-link.active {
+    background-color: #fff !important;
+    color: var(--primary-navy) !important;
+    border-bottom: 3px solid var(--accent-gold) !important;
+    font-weight: 700;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+}
+
+/* --- Utilities --- */
+.x-small { font-size: 0.65rem; }
+.ls-1 { letter-spacing: 1px; }
+.ls-2 { letter-spacing: 2px; }
+.opacity-75 { opacity: 0.75; }
+
+    /* Add this to your style.css or top of file */
+    .btn-register-main {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%);
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 4px 15px rgba(26, 42, 58, 0.2);
+    }
+
+    .modal-backdrop {
+    z-index: 1040 !important;
+}
+.modal {
+    z-index: 1050 !important;
+}
+/* This removes the ugly double-border on your buttons */
+.btn-group > .btn:not(:last-child) {
+    border-right: none;
+}
+
+    .btn-register-main:hover {
+        background: linear-gradient(135deg, #c5a059 0%, #d4af37 100%); /* Changes to Gold on hover */
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 8px 25px rgba(197, 160, 89, 0.4);
+        color: #1a2a3a;
+    }
+
+    .btn-register-main:active {
+        transform: scale(0.98);
+    }
+
+/* Table Micro-Styling */
+.hover-row:hover { background-color: #fdfbf7; }
+.bg-gold-soft { background-color: rgba(197, 160, 89, 0.1); }
+.text-gold { color: #c5a059; }
+
+/* Action Buttons */
+.btn-view-file {
+    background-color: transparent;
+    color: var(--primary-navy);
+    border: 1px solid var(--primary-navy);
+    font-weight: 700;
+    font-size: 0.65rem;
+    padding: 6px 12px;
+    letter-spacing: 1px;
+}
+
+.btn-approve-sanctuary {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    font-weight: 700;
+    font-size: 0.65rem;
+    padding: 6px 16px;
+    letter-spacing: 1px;
+}
+
+.btn-confirm-intake {
+    background-color: #e74c3c;
+    color: white;
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 8px 20px;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
+}
+
+/* Add these to your style.css */
+.btn-approve-sanctuary {
+    background-color: #27ae60;
+    color: white !important;
+    border: none;
+    font-weight: 700;
+    font-size: 0.65rem;
+    padding: 8px 16px;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-approve-sanctuary:hover {
+    background-color: #219150;
+    transform: translateY(-2px);
+}
+
+.btn-view-file {
+    background-color: transparent;
+    color: var(--primary-navy);
+    border: 1px solid var(--primary-navy);
+    font-weight: 700;
+    font-size: 0.65rem;
+    padding: 8px 12px;
+    letter-spacing: 1px;
+}
+
+/* Schedule Specific Buttons */
+.btn-confirm-intake {
+    background-color: #e74c3c;
+    color: white !important;
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: none;
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-confirm-intake:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(231, 76, 60, 0.3);
+}
+
+.ls-1 { letter-spacing: 1px; }
+.ls-2 { letter-spacing: 2px; }
+
+/* Adopter Registry Specifics */
+.status-stamp {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    padding: 5px 12px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.stamp-verified {
+    background-color: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+    border: 1px solid #27ae60;
+}
+
+.stamp-pending {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+}
+
+.btn-dossier-view {
+    background-color: var(--primary-navy);
+    color: white !important;
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border-radius: 0;
+    transition: all 0.3s ease;
+}
+
+.btn-dossier-view:hover {
+    background-color: var(--accent-gold);
+    color: var(--primary-navy) !important;
+}
+
+/* Add this to your style.css */
+.btn-navy {
+    background-color: #1a2a3a !important;
+    color: #ffffff !important;
+    letter-spacing: 2px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.btn-navy:hover {
+    background-color: var(--accent-gold) !important;
+    color: #1a2a3a !important;
+}
+
+.btn-sanctuary-primary {
+    background: linear-gradient(135deg, #c5a059 0%, #b38f4d 100%);
+    color: #1a2a3a !important;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px; /* Softer corners */
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(197, 160, 89, 0.2);
+}
+
+.btn-sanctuary-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(197, 160, 89, 0.4);
+    background: linear-gradient(135deg, #d4af37 0%, #c5a059 100%);
+}
+
+.btn-sanctuary-primary:active {
+    transform: translateY(0);
+}
+
+/* Enhanced Footer Styling */
+footer { 
+    background-color: #ffffff; /* Brighter, cleaner feel */
+    color: var(--text-main); 
+    padding-top: 80px; 
+    border-top: 1px solid var(--border-light);
+}
+
+.footer-top {
+    padding-bottom: 60px;
+}
+
+footer h5 { 
+    color: var(--primary-navy); 
+    font-size: 0.85rem; 
+    font-weight: 800; 
+    letter-spacing: 2px; 
+    margin-bottom: 1.5rem; 
+    position: relative;
+}
+
+/* Accent line under headings */
+footer h5::after {
+    content: '';
+    display: block;
+    width: 30px;
+    height: 2px;
+    background: var(--accent-gold);
+    margin-top: 10px;
+}
+
+.footer-link {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.footer-link:hover {
+    color: var(--accent-gold);
+    padding-left: 5px;
+}
+
+.social-icon {
+    width: 35px;
+    height: 35px;
+    background: var(--primary-navy);
+    color: white !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 10px;
+    transition: 0.3s;
+}
+
+.social-icon:hover {
+    background: var(--accent-gold);
+    transform: translateY(-3px);
+}
+
+.newsletter-input {
+    border-radius: 0;
+    border: 1px solid var(--border-light);
+    padding: 12px;
+    font-size: 0.85rem;
+}
+
+.newsletter-btn {
+    background: var(--primary-navy);
+    color: white;
+    border-radius: 0;
+    padding: 10px 20px;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+.footer-bottom {
+    background: #f8f9fa;
+    padding: 30px 0;
+}
+
+/* Floating Glass Footer */
+footer { 
+    background-color: #fff;
+    padding: 100px 0 40px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.footer-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--primary-navy);
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.footer-link-group a {
+    display: block;
+    color: #888;
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    transition: 0.2s;
+    letter-spacing: 0.5px;
+}
+
+.footer-link-group a:hover {
+    color: var(--accent-gold);
+    transform: translateX(3px);
+}
+
+.contact-info {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+/* Glass-style Donation Box */
+.support-card {
+    background: #fafafa;
+    border: 1px solid #eee;
+    padding: 24px;
+    border-radius: 0; /* Keep it sharp like your hero buttons */
+}
+
+.footer-tagline {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent-gold);
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* Enhanced Navigation Button */
+.btn-portal-nav {
+    background: var(--primary-navy);
+    color: white !important;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(26, 42, 58, 0.15);
+    letter-spacing: 1px;
+}
+
+/* Hover Effect: Synchronized with the Sanctuary Gold theme */
+.btn-portal-nav:hover {
+    background: linear-gradient(135deg, #c5a059 0%, #d4af37 100%);
+    color: var(--primary-navy) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(197, 160, 89, 0.3);
+}
+
+/* Active State: Slight press down effect */
+.btn-portal-nav:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(197, 160, 89, 0.2);
+}
+
+.btn-classic:hover {
+    /* Slightly lighten the gold */
+    filter: brightness(1.1);
+    
+    /* Add a "golden" glow shadow */
+    box-shadow: 0 8px 15px rgba(212, 175, 55, 0.3) !important;
+    
+    /* Lift the button up slightly */
+    transform: translateY(-3px);
+    
+    /* Ensure the cursor changes to a pointer */
+    cursor: pointer;
+}
+
+/* Smooth transition for the 'lifting' effect */
+.btn-classic {
+    transition: all 0.3s ease;
+}
+
+.btn-outline-dark:hover {
+    /* Fill the background with the dark color */
+    background-color: #212529 !important; 
+    
+    /* Change text to white so it remains readable */
+    color: #ffffff !important;
+    
+    /* Add a subtle lift or shadow */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    
+    /* Smoothly transition the change */
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-gold-outline:hover {
+    /* Fill the background with your gold color */
+    background-color: #c5a059 !important;
+    
+    /* Force text to white so it pops against the gold */
+    color: #ffffff !important;
+    
+    /* Add a subtle lift */
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(197, 160, 89, 0.3) !important;
+}
+
+/* Add a smooth transition to the base button */
+.btn-gold-outline {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Makes the password input and toggle button look like one solid piece */
+.input-group > .form-control:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.input-group > .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: none;
+}
+
+
+/* Link Hover Effect */
+.forgot-link {
+    transition: all 0.3s ease;
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.forgot-link:hover {
+    color: var(--accent-hover) !important;
+    text-decoration: underline !important;
+}
+
+.forgot-link {
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.forgot-link:hover {
+    color: var(--accent-hover) !important;
+    transform: translateX(-3px); /* Subtle shift to draw attention */
+}
+
+/* Optional: Add a small decorative dot before the link on hover */
+.forgot-link::before {
+    content: '•';
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.forgot-link:hover::before {
+    opacity: 1;
+}
+
+/* --- UNIVERSAL RESPONSIVE OVERRIDES --- */
+
+@media (max-width: 991.98px) {
+    /* Hero Scaling */
+    .hero { height: 60vh; }
+    .display-1 { 
+        font-size: clamp(2.5rem, 8vw, 4rem) !important; 
+        line-height: 1.1; 
+    }
+    
+    /* Mandate Boxes Stacking */
+    .mandate-box { 
+        border-left: none !important; 
+        border-top: 1px solid var(--border-light); 
+        padding: 30px 15px !important; 
+    }
+    .mandate-box.gold-border { border-top: 3px solid var(--accent-gold); }
+}
+
+@media (max-width: 767.98px) {
+    /* Pet Cards Grid Fix */
+    .pet-card img { height: 280px !important; }
+    
+    /* Buttons Stacking on Mobile */
+    .btn-gallery, .pet-card .d-flex.gap-2 { 
+        flex-direction: column !important; 
+        width: 100%;
+    }
+    
+    /* Center the Journey Story Section */
+    .journey-img { margin-bottom: 30px; }
+    #origin .text-md-start { text-align: center !important; }
+    #origin .d-flex { justify-content: center; gap: 30px !important; }
+
+    /* Fix iOS auto-zoom on inputs */
+    .form-control, .form-select, .newsletter-input { 
+        font-size: 16px !important; 
+    }
+}
+
+@media (max-width: 575.98px) {
+    /* Footer Simplification */
+    footer { padding-top: 50px; }
+    footer .row.g-5 { text-align: center; }
+    footer h5::after { margin: 10px auto 0; } /* Centers the gold line */
+    
+    .navbar-brand span { font-size: 1.2rem; }
+    
+    /* Ensure the My Dashboard / Login button is easy to tap */
+    .navbar-nav .btn-portal-nav { 
+        width: 100%; 
+        margin-top: 15px;
+        padding: 12px !important;
+    }
+}
+
+/* --- CLEAN RESPONSIVE OVERRIDES (Paste at bottom of style.css) --- */
+
+@media (max-width: 991px) {
+    /* Prevent the massive titles from bleeding off-screen */
+    h1.display-1 { 
+        font-size: 2.8rem !important; 
+        line-height: 1.1; 
+    }
+    h2.display-5 { 
+        font-size: 1.8rem !important; 
+    }
+
+    /* Fix the hero height so it doesn't feel like a never-ending scroll */
+    .hero { 
+        height: 60vh !important; 
+    }
+
+    /* Stack the side-by-side boxes */
+    .mandate-box { 
+        border-left: none !important; 
+        border-top: 2px solid #eee; 
+        padding: 20px 0 !important; 
+    }
+}
+
+@media (max-width: 768px) {
+    /* Ensure the main content doesn't "shake" horizontally */
+    .container, .container-fluid {
+        width: 100% !important;
+        padding-right: 15px !important;
+        padding-left: 15px !important;
+        overflow-x: hidden;
+    }
+
+    /* Pet Cards: Make sure buttons don't overlap */
+    .pet-card .d-flex.gap-2 {
+        flex-direction: column !important;
+    }
+    
+    /* Stop iPhone from zooming in when you tap a text box */
+    input, select, textarea, .form-control {
+        font-size: 16px !important;
+    }
+}
+
+
+
+/* Push the header up out of view */
+.header-hidden {
+    transform: translateY(-100%);
+}
+
+/* Ensure the header has a transition for a smooth slide effect */
+#main-header {
+    transition: transform 0.3s ease-in-out !important;
+}
+
+/* This moves the header up by its own height */
+.header-hidden {
+    transform: translateY(-100%);
+}
+
+/* Ensure the fixed-top doesn't overlap your modals */
+.modal {
+    z-index: 1070 !important;
+}
+
+:root { 
+    --primary-navy: #1a2a3a; 
+    --accent-gold: #c5a059; /* The exact yellow from your logo */
+}
+
+.form-check-input:checked {
+    background-color: var(--accent-gold) !important;
+    border-color: var(--accent-gold) !important;
+}
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(197, 160, 89, 0.1) !important;
+}

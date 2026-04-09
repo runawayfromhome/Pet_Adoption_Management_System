@@ -1,0 +1,514 @@
+{% extends "admin/admin_layout.html" %}
+
+{% from "macros.html" import render_pet_table %}
+
+{% block content %}
+
+<div class="container-fluid px-0 mb-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show rounded-0 border-0 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center small">
+                        <strong class="text-uppercase ls-1">System:</strong>&nbsp;{{ message }}
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 p-4 bg-white shadow-sm gap-3" 
+     style="border-radius: 15px; border-left: 5px solid var(--accent-gold); border-bottom: 1px solid #f0f0f0;">
+    
+    <div>
+        <h2 class="display-6 fw-bold mb-0" style="color: var(--primary-navy); font-family: 'Playfair Display', serif; letter-spacing: -1px;">
+            Pet Registry
+        </h2>
+        <small class="text-uppercase text-muted fw-bold ls-1" style="font-size: 0.7rem;">Sanctuary Population Management</small>
+    </div>
+
+    <button class="btn-register-main w-100 w-md-auto justify-content-center" data-bs-toggle="modal" data-bs-target="#registerPetModal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+        </svg>
+        <span>Add New Entry</span>
+    </button>
+</div>
+
+<div class="mb-4">
+    <form action="{{ url_for('admin_inventory') }}" method="GET" class="row g-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+        <div class="col-12 col-md-10">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-0 ps-4 d-none d-sm-flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#95a5a6" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                    </svg>
+                </span>
+                <input type="text" name="search" class="form-control border-0 py-3 ps-3 ps-sm-2" 
+                       style="box-shadow: none; font-size: 0.95rem;"
+                       placeholder="Filter by name, breed, or medical status..." 
+                       value="{{ request.args.get('search', '') }}">
+            </div>
+        </div>
+        <div class="col-12 col-md-2">
+            <button type="submit" class="btn btn-search-terminal w-100 h-100 py-3 py-md-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+                SEARCH
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="nav-container mb-3" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    <ul class="nav nav-tabs border-bottom-0 flex-nowrap gap-2" id="inventoryTabs" role="tablist" style="min-width: max-content;">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active shadow-sm" id="available-tab" data-bs-toggle="tab" data-bs-target="#available" type="button" role="tab">
+                Available ({{ pets|selectattr('status', 'equalto', 'Available')|list|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link shadow-sm" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button" role="tab">
+                Approved ({{ pets|selectattr('status', 'equalto', 'Approved')|list|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link shadow-sm" id="adopted-tab" data-bs-toggle="tab" data-bs-target="#adopted" type="button" role="tab">
+                Adopted ({{ pets|selectattr('status', 'equalto', 'Adopted')|list|length }})
+            </button>
+        </li>
+    </ul>
+</div>
+
+<div class="tab-content card p-2 p-md-4 border-0 shadow-sm" id="inventoryTabsContent" style="border-top: 4px solid var(--accent-gold) !important; border-radius: 12px;">
+   
+    <div class="tab-pane fade show active" id="available" role="tabpanel">
+        {{ render_pet_table(pets|selectattr('status', 'equalto', 'Available')|list, "No available pets found.") }}
+    </div>
+    <div class="tab-pane fade" id="approved" role="tabpanel">
+        {{ render_pet_table(pets|selectattr('status', 'equalto', 'Approved')|list, "No pets are currently in the Approved state.") }}
+    </div>
+    <div class="tab-pane fade" id="adopted" role="tabpanel">
+        {{ render_pet_table(pets|selectattr('status', 'equalto', 'Adopted')|list, "No adopted pets found.") }}
+    </div>
+</div>
+
+    {% macro render_pet_table(pet_list, empty_message) %}
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr class="text-muted x-small text-uppercase ls-1">
+                    <th class="ps-4">Pet Details</th>
+                    <th class="d-none d-md-table-cell">Breed</th>
+                    <th>Current Adopter</th> 
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pet in pet_list %}
+                <tr class="hover-row">
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="{{ url_for('static', filename='uploads/' + pet.photo) if pet.photo else '' }}" 
+                                 class="rounded shadow-sm" style="width: 45px; height: 45px; object-fit: cover; flex-shrink: 0;">
+                            <div>
+                                <a href="{{ url_for('admin_view_pet', pet_id=pet.id) }}" class="fw-bold text-decoration-none" style="color: var(--primary-navy);">
+                                    {{ pet.name }} &nearr;
+                                </a><br>
+                                {% if pet.special_needs == 'Yes' %}
+                                    <span class="badge bg-warning text-dark rounded-0 px-2" style="font-size: 0.55rem;">SPECIAL NEEDS</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="small d-none d-md-table-cell">{{ pet.breed }}</td>
+                    <td>
+                        {% if pet.status != 'Available' and pet.current_adopter %}
+                            <a href="{{ url_for('admin_view_adopter', user_id=pet.current_adopter.id) }}" 
+                               class="btn btn-sm btn-light border-0 d-inline-flex align-items-center gap-2 py-1 px-2" 
+                               style="border-radius: 6px; background: #f8f9fa;">
+                                <div class="bg-navy text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 0.6rem;">
+                                    {{ pet.current_adopter.full_name[:1]|upper }}
+                                </div>
+                                <span class="fw-bold x-small text-navy text-truncate" style="max-width: 80px;">{{ pet.current_adopter.full_name }}</span>
+                            </a>
+                        {% else %}
+                            <span class="text-muted x-small italic opacity-50">NO ACTIVE CLAIM</span>
+                        {% endif %}
+                    </td>
+                    <td>
+    <span class="badge rounded-0 px-3 
+        {% if pet.status == 'Available' %}bg-success
+        {% elif pet.status == 'Approved' %}bg-gold
+        {% elif pet.status == 'Declined' %}bg-danger  {% else %}bg-secondary{% endif %}" 
+        style="font-size: 0.65rem; letter-spacing: 0.5px;">
+        {{ pet.status|upper }}
+    </span>
+
+    {% if pet.status == 'Declined' and pet.declined_reason %}
+        <div class="x-small text-danger mt-1 italic" 
+             style="font-size: 0.65rem; font-weight: 600; line-height: 1.2;">
+            REASON: {{ pet.declined_reason }}
+        </div>
+    {% endif %}
+</td>
+                    <td class="text-end pe-4">
+                        <div class="btn-group shadow-sm">
+                            <button class="btn btn-sm btn-outline-dark px-2 px-md-3" data-bs-toggle="modal" data-bs-target="#editModal{{pet.id}}">Edit</button>
+                            <a href="{{ url_for('delete_pet', pet_id=pet.id) }}" class="btn btn-sm btn-outline-danger px-2 px-md-3" onclick="return confirm('WARNING: Permanently remove this pet?')">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center py-5 text-muted italic">{{ empty_message }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endmacro %}
+
+
+<div class="modal fade" id="registerPetModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header border-0 bg-light p-4 sticky-top">
+                <h5 class="fw-bold mb-0">Register New Companion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/admin/add_pet" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-3 p-md-4 text-start">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-sm">Pet Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Luna" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sm">Breed</label>
+                            <input type="text" name="breed" class="form-control" placeholder="e.g. Golden Retriever" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4 col-4">
+                            <label class="form-label-sm">Age</label>
+                            <select name="age_category" class="form-select" required>
+                                <option value="N/A" selected>N/A</option>
+                                <option value="Puppy">Puppy</option>
+                                <option value="Young">Young</option>
+                                <option value="Adult" selected>Adult</option>
+                                <option value="Senior">Senior</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-4">
+                            <label class="form-label-sm">Gender</label>
+                            <select name="gender" class="form-select" required>
+                                <option value="N/A" selected>N/A</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-4">
+                            <label class="form-label-sm">Size</label>
+                            <select name="size" class="form-select" required>
+                                <option value="N/A" selected>N/A</option>
+                                <option value="Small">Small</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Big">Big</option></select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-sm">Energy/Temperament</label>
+                        <select name="energy_level" class="form-select" required>
+                            <option value="N/A" selected>N/A</option>
+                            <option value="Low Energy">Low Energy</option>
+                            <option value="Moderate" selected>Moderate</option>
+                            <option value="High Energy">High Energy</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-4 mb-3 border p-3 bg-light rounded shadow-sm">
+                        <label class="form-label-sm mb-2 border-bottom d-block pb-1">Initial Health Registry</label>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6 col-12">
+                                <label class="small-label">Vaccination Status</label>
+                                <select name="vac_status" class="form-select form-select-sm" required>
+                                    <option value="N/A" selected>N/A</option>
+                                    <option value="Not Vaccinated">Not Vaccinated</option>
+                                    <option value="Partially Vaccinated">Partially Vaccinated</option>
+                                    <option value="Fully Vaccinated">Fully Vaccinated</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <label class="small-label">Date of Last Vaccination</label>
+                                <input type="date" name="vac_date" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6 col-6">
+                                <label class="small-label">Spayed / Neutered</label>
+                                <select name="spayed_neutered" class="form-select form-select-sm" required>
+                                    <option value="N/A" selected>N/A</option>
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-6">
+                                <label class="small-label">Special Disabilities/Needs</label>
+                                <select name="special_needs" class="form-select form-select-sm" required>
+                                    <option value="N/A" selected>N/A</option>
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option></select>
+                            </div>
+                        </div>
+                    </div>
+
+                
+                    <div class="mb-3">
+                        <label class="form-label-sm">Clinical Notes & Background</label>
+                        <textarea name="other_description" class="form-control" rows="3" placeholder="Describe personality..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-sm">Profile Photo</label>
+                        <input type="file" name="photo" class="form-control" accept="image/*" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 p-md-4 pt-0 d-flex flex-column-reverse flex-md-row gap-2">
+                    <button type="button" class="btn btn-cancel-sanctuary w-100 w-md-auto" data-bs-dismiss="modal">DISCARD CHANGES</button>
+                    <button type="submit" class="btn btn-commit-sanctuary w-100 w-md-auto shadow-sm">COMMIT TO REGISTRY</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for pet in pets %}
+<div class="modal fade" id="editModal{{ pet.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header border-0 bg-light p-4 sticky-top">
+                <h5 class="fw-bold mb-0">Update Registry Entry: {{ pet.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('edit_pet', pet_id=pet.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-3 p-md-4 text-start">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-sm">Pet Name</label>
+                            <input type="text" name="name" class="form-control" value="{{ pet.name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sm">Breed</label>
+                            <input type="text" name="breed" class="form-control" value="{{ pet.breed }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4 col-4">
+                            <label class="form-label-sm">Age Category</label>
+                            <select name="age_category" class="form-select" required>
+                                <option value="N/A" {% if pet.age_category == 'N/A' %}selected{% endif %}>N/A</option>
+                                <option value="Puppy" {% if pet.age_category == 'Puppy' %}selected{% endif %}>Puppy</option>
+                                <option value="Young" {% if pet.age_category == 'Young' %}selected{% endif %}>Young</option>
+                                <option value="Adult" {% if pet.age_category == 'Adult' %}selected{% endif %}>Adult</option>
+                                <option value="Senior" {% if pet.age_category == 'Senior' %}selected{% endif %}>Senior</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-4">
+                            <label class="form-label-sm">Gender</label>
+                            <select name="gender" class="form-select" required>
+                                <option value="N/A" {% if pet.gender == 'N/A' %}selected{% endif %}>N/A</option>
+                                <option value="Male" {% if pet.gender == 'Male' %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if pet.gender == 'Female' %}selected{% endif %}>Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-4">
+                            <label class="form-label-sm">Size</label>
+                            <select name="size" class="form-select" required>
+                                <option value="N/A" {% if pet.size == 'N/A' %}selected{% endif %}>N/A</option>
+                                <option value="Small" {% if pet.size == 'Small' %}selected{% endif %}>Small</option>
+                                <option value="Medium" {% if pet.size == 'Medium' %}selected{% endif %}>Medium</option>
+                                <option value="Big" {% if pet.size == 'Big' %}selected{% endif %}>Big</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6 col-12">
+                            <label class="form-label-sm">Energy/Temperament</label>
+                            <select name="energy_level" class="form-select" required>
+                                <option value="N/A" {% if pet.energy_level == 'N/A' %}selected{% endif %}>N/A</option>
+                                <option value="Low Energy" {% if pet.energy_level == 'Low Energy' %}selected{% endif %}>Low Energy</option>
+                                <option value="Moderate" {% if pet.energy_level == 'Moderate' %}selected{% endif %}>Moderate</option>
+                                <option value="High Energy" {% if pet.energy_level == 'High Energy' %}selected{% endif %}>High Energy</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 col-12 {% if pet.status != 'Declined' %}d-none{% endif %}" id="reasonContainer{{ pet.id }}">
+                            <label class="form-label-sm text-danger">Reason for Declining</label>
+                            <input type="text" name="declined_reason" class="form-control border-danger" 
+                                placeholder="e.g., Application incomplete" value="{{ pet.declined_reason or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 mb-3 border p-3 bg-light rounded shadow-sm">
+                        <label class="form-label-sm mb-2 border-bottom d-block">Health Registry Updates</label>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6 col-12">
+                                <label class="small-label">Vaccination Status</label>
+                                <select name="vac_status" class="form-select form-select-sm" required>
+                                    <option value="N/A" {% if pet.vac_status == 'N/A' %}selected{% endif %}>N/A</option>
+                                    <option value="Not Vaccinated" {% if pet.vac_status == 'Not Vaccinated' %}selected{% endif %}>Not Vaccinated</option>
+                                    <option value="Partially Vaccinated" {% if pet.vac_status == 'Partially Vaccinated' %}selected{% endif %}>Partially Vaccinated</option>
+                                    <option value="Fully Vaccinated" {% if pet.vac_status == 'Fully Vaccinated' %}selected{% endif %}>Fully Vaccinated</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <label class="small-label">Date of Last Vaccination</label>
+                                <input type="date" name="vac_date" class="form-control form-control-sm" value="{{ pet.vac_date }}">
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6 col-6">
+                                <label class="small-label">Spayed / Neutered</label>
+                                <select name="spayed_neutered" class="form-select form-select-sm" required>
+                                    <option value="N/A" {% if pet.spayed_neutered == 'N/A' %}selected{% endif %}>N/A</option>
+                                    <option value="No" {% if pet.spayed_neutered == 'No' %}selected{% endif %}>No</option>
+                                    <option value="Yes" {% if pet.spayed_neutered == 'Yes' %}selected{% endif %}>Yes</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-6">
+                                <label class="small-label">Special Disabilities/Needs</label>
+                                <select name="special_needs" class="form-select form-select-sm" required>
+                                    <option value="N/A" {% if pet.special_needs == 'N/A' %}selected{% endif %}>N/A</option>
+                                    <option value="No" {% if pet.special_needs == 'No' %}selected{% endif %}>No</option>
+                                    <option value="Yes" {% if pet.special_needs == 'Yes' %}selected{% endif %}>Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-sm">Clinical Notes & Background</label>
+                        <textarea name="other_description" class="form-control" rows="3">{{ pet.other_description }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-sm">Update Photo (Leave blank to keep current)</label>
+                        <input type="file" name="photo" class="form-control" accept="image/*">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 p-md-4 pt-0 d-flex flex-column-reverse flex-md-row gap-2">
+                    <button type="button" class="btn btn-cancel-sanctuary w-100 w-md-auto" data-bs-dismiss="modal">DISCARD CHANGES</button>
+                    <button type="submit" class="btn btn-commit-sanctuary w-100 w-md-auto shadow-sm">COMMIT CHANGES</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<style>
+    :root { --primary-navy: #1a2a3a; --accent-gold: #c5a059; }
+    .text-navy { color: var(--primary-navy) !important; }
+    .bg-navy { background-color: var(--primary-navy) !important; }
+    .ls-1 { letter-spacing: 1px; }
+    .small-label { font-size: 0.6rem; opacity: 0.5; display: block; margin-bottom: 2px; }
+    .form-label-sm { font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; display: block; }
+
+    /* Custom Buttons */
+    .btn-register-main { background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%); color: white; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 15px rgba(26, 42, 58, 0.2); }
+    .btn-register-main:hover { background: linear-gradient(135deg, #c5a059 0%, #d4af37 100%); transform: scale(1.05) translateY(-2px); color: #1a2a3a; }
+    
+    .btn-search-terminal { background-color: var(--primary-navy); color: #ffffff !important; border: none; font-weight: 700; letter-spacing: 2px; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; }
+    .btn-search-terminal:hover { background-color: #2c3e50; color: var(--accent-gold) !important; }
+
+    .btn-commit-sanctuary { background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%); color: #ffffff !important; border: none; border-radius: 8px; padding: 12px 32px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+    .btn-commit-sanctuary:hover { background: linear-gradient(135deg, #c5a059 0%, #d4af37 100%); color: #1a2a3a !important; transform: translateY(-2px); }
+
+    .btn-cancel-sanctuary { background-color: transparent; color: #95a5a6; border: 1px solid #dfe6e9; border-radius: 8px; padding: 10px 24px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; transition: 0.3s; }
+
+    /* Horizontal Swiping Container */
+    .nav-container::-webkit-scrollbar { display: none; }
+    .nav-tabs .nav-link { border: none; color: #666; font-weight: 600; padding: 10px 20px; border-radius: 8px; }
+    .nav-tabs .nav-link.active { background: var(--primary-navy) !important; color: white !important; }
+
+    .hover-row td a {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+}
+
+
+    /* Modal Height and Fullscreen on Mobile */
+    @media (max-width: 576px) {
+        .modal-fullscreen-sm-down { margin: 0; max-width: 100%; height: 100%; }
+        .modal-fullscreen-sm-down .modal-content { height: 100%; border-radius: 0; }
+        .modal-body { overflow-y: auto; }
+    }
+
+    @media (max-width: 991.98px) {
+    .main-content {
+        position: relative;
+        z-index: 1; /* Keeps content clickable */
+    }
+}
+
+    /* Additional mobile styles */
+    @media (max-width: 991.98px) {
+        /* 1. Reset layout for mobile stack */
+        body, .admin-wrapper, .main-container { 
+            display: block !important; 
+        }
+
+        /* 2. Modified Sidebar Logic */
+        .sidebar, #sidebar {
+            width: 100% !important;
+            height: auto !important;
+            position: fixed !important; /* Fixed so it overlays content */
+            top: 60px; /* Adjust based on your navbar height */
+            left: 0;
+            z-index: 1000;
+            background: white;
+            display: none; /* Hidden by default on mobile */
+        }
+
+        /* 3. SHOW sidebar when 'active' class is present */
+        .sidebar.active, #sidebar.active {
+            display: block !important;
+        }
+
+        /* 4. Content width adjustment */
+        .main-content, #content {
+            margin-left: 0 !important;
+            width: 100% !important;
+            padding: 15px !important;
+        }
+
+        /* 5. Header Stack Fix */
+        .d-flex.justify-content-between.align-items-md-center {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+        }
+    }
+</style>
+
+<script>
+function toggleDeclinedReason(petId) {
+    const statusSelect = document.getElementById('statusSelect' + petId);
+    const reasonContainer = document.getElementById('reasonContainer' + petId);
+    
+    if (statusSelect.value === 'Declined') {
+        reasonContainer.classList.remove('d-none');
+    } else {
+        reasonContainer.classList.add('d-none');
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetAdopt | Professional Pet Sanctuary</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#1a2a3a">
+    <style>
+        :root { 
+            --primary-navy: #1a2a3a; 
+            --accent-gold: #c5a059; 
+            --bg-cream: #fdfdfb; 
+            --text-main: #333333;
+            --border-light: #e0e0e0;
+            --footer-bg: #f4f4f2;
+        }
+
+        /* Fixed Scrolling Offset Fix */
+        html { scroll-behavior: smooth; } 
+        [id] { scroll-margin-top: 120px; } 
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-cream); color: var(--text-main); line-height: 1.7; overflow-x: hidden; }
+        h1, h2, h3, .navbar-brand { font-family: 'Playfair Display', serif; }
+
+        /* Navbar Styling */
+        .navbar {
+            background: #fff;
+            border-bottom: 1px solid var(--border-light);
+            padding: 1.2rem 0;
+        }
+        .navbar-brand { 
+            font-size: 1.6rem; 
+            color: var(--primary-navy) !important; 
+            letter-spacing: 1px; 
+            
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .navbar-logo { height: 32px; width: auto; fill: var(--accent-gold); }
+        .nav-link { font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-main) !important; font-weight: 600; }
+
+        /* Hero Styling */
+        .hero { 
+            background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=1350&q=80'); 
+            height: 75vh; background-size: cover; background-position: center; color: white; 
+            display: flex; align-items: center; border-bottom: 8px solid var(--accent-gold);
+        }
+
+        .btn-classic {
+            background: var(--accent-gold); color: white;
+            padding: 16px 45px; border-radius: 0; 
+            text-transform: uppercase; font-weight: 600; letter-spacing: 2px; font-size: 0.85rem;
+            transition: 0.4s; border: 1px solid var(--accent-gold);
+            text-decoration: none; display: inline-block;
+        }
+        .btn-classic:hover { background: transparent; color: white; border-color: white; }
+
+        /* Enhanced Button Styling */
+        .btn-gallery {
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+        }
+
+        .btn-view {
+            background: transparent;
+            color: var(--primary-navy);
+            border: 1px solid var(--primary-navy);
+        }
+
+        .btn-view:hover {
+            background: var(--primary-navy);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .btn-add-cart {
+            background: white;
+            color: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+        }
+
+        .btn-add-cart:hover {
+            background: var(--accent-gold);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(197, 160, 89, 0.2);
+        }
+
+        .btn-adopt-now {
+            background: var(--primary-navy);
+            color: white;
+            border: 1px solid var(--primary-navy);
+        }
+
+        .btn-adopt-now:hover {
+            background: #2c3e50;
+            transform: translateY(-3px);
+        }
+
+        /* Icon refinement */
+        .btn-gallery svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Sections Styling */
+        .mv-section { background: #fff; padding: 100px 0; border-bottom: 1px solid var(--border-light); }
+        .mandate-box { padding: 40px; border-left: 1px solid var(--border-light); }
+        .mandate-box.gold-border { border-left: 3px solid var(--accent-gold); background: #fcfaf5; }
+
+        .value-card { border: none; border-top: 1px solid var(--border-light); padding: 40px 20px; transition: 0.3s; }
+        .value-card:hover { background: #fff; box-shadow: 0 15px 30px rgba(0,0,0,0.03); }
+        .value-number { font-family: 'Playfair Display'; color: var(--accent-gold); font-size: 2rem; margin-bottom: 1rem; }
+
+        .journey-img { border: 12px solid white; box-shadow: 0 20px 40px rgba(0,0,0,0.06); }
+
+        .pet-card { border-radius: 0; border: 1px solid var(--border-light); background: #fff; transition: 0.4s; }
+        .pet-card:hover { transform: translateY(-5px); border-color: var(--accent-gold); }
+        
+        .modal-content { border-radius: 0; border: none; }
+        .data-label { font-size: 0.65rem; letter-spacing: 1.5px; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; }
+        .physical-box, .medical-box { background: #f9f9f9; padding: 25px; border: 1px solid #f0f0f0; }
+
+
+        /* Add these to your <style> section */
+.alert-success-custom { background-color: #e7f3ef !important; color: #1a2a3a !important; }
+.alert-danger-custom { background-color: #f8d7da !important; color: #1a2a3a !important; }
+
+        /* Footer Styling */
+        footer { 
+            background: var(--footer-bg); 
+            color: var(--text-main); 
+            padding-top: 80px; 
+            border-top: 1px solid var(--border-light);
+        }
+        footer h5 { 
+            color: var(--primary-navy); 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            letter-spacing: 2px; 
+            margin-bottom: 1.8rem; 
+            text-transform: uppercase;
+        }
+        footer a { color: var(--text-main); text-decoration: none; transition: 0.3s; }
+        footer a:hover { color: var(--accent-gold); }
+        .footer-divider { opacity: 0.1; border-top: 1px solid var(--primary-navy); margin-top: 50px; }
+    
+
+        /* 1. Remove 300ms delay for all touch devices */
+    html, body { touch-action: manipulation; }
+
+    /* 2. Instant Touch Feedback (Active State) */
+    .btn-classic:active, .btn-sanctuary:active {
+        transform: scale(0.96) !important;
+        filter: brightness(0.9);
+        transition: 0s !important; /* Makes it instant! */
+    }
+    
+    @media (max-width: 767px) {
+    /* Ensures the modal header elements don't overlap the X button */
+    .modal-body .d-flex.justify-content-between {
+        position: relative;
+        z-index: 10;
+        padding-right: 40px !important; /* Makes room for the X */
+    }
+
+    /* Standardizes the exit button position so it's always tappable */
+    .btn-close {
+        opacity: 0.8;
+        padding: 1.5rem; /* Makes the "hit area" larger for thumbs */
+        background-color: white; /* Optional: adds a background so it's visible over the photo */
+        border-radius: 50%;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+}
+
+    </style>
+    
+    
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top shadow-sm py-3" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+    <div class="container">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/" style="letter-spacing: 1px; color: var(--primary-navy) !important;">
+            <svg class="navbar-logo" width="30" height="30" viewBox="0 0 24 24" fill="var(--accent-gold)" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8.5 5c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5zm7 0c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5zm-11 5c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5zm15 0c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5zm-7.5 2c-3.04 0-5.5 2.46-5.5 5.5s2.46 5.5 5.5 5.5 5.5-2.46 5.5-5.5-2.46-5.5-5.5-5.5z"/>
+            </svg>
+            <span style="font-family: 'Playfair Display';">PETADOPT</span>
+        </a>
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link px-3" href="#origin">The Journey</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="#pets">The Gallery</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="#contact">Contact</a></li>
+                <li class="nav-item">
+                    <a class="nav-link px-3 position-relative" href="/cart">
+                        MY LIST 
+                        {% if session.get('cart') %}
+                            <span class="badge rounded-pill bg-danger" style="font-size: 0.5rem; position: absolute; top: 0; right: 10px;">{{ session['cart']|length }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="ms-lg-3">
+    {% if session.get('admin_id') %}
+        <a class="btn rounded-1 px-4 py-2 fw-bold text-uppercase d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+           style="background-color: var(--primary-navy); color: white; border: 1px solid var(--primary-navy); font-size: 0.75rem; letter-spacing: 1px; transition: all 0.3s ease;" 
+           onmouseover="this.style.backgroundColor='#111c26'; this.style.boxShadow='0 4px 12px rgba(26,42,58,0.2)'"
+           onmouseout="this.style.backgroundColor='var(--primary-navy)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)'"
+           href="/admin/dashboard">
+            <svg width="14" height="14" fill="none" stroke="var(--accent-gold)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            Staff Registry
+        </a>
+        
+    {% elif session.get('user_id') %}
+        <a class="btn rounded-1 px-4 py-2 fw-bold text-uppercase d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+           style="background-color: var(--accent-gold); color: white; border: 1px solid var(--accent-gold); font-size: 0.75rem; letter-spacing: 1px; transition: all 0.3s ease;" 
+           onmouseover="this.style.backgroundColor='#b58f4a'; this.style.boxShadow='0 4px 12px rgba(197,160,89,0.3)'"
+           onmouseout="this.style.backgroundColor='var(--accent-gold)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)'"
+           href="/dashboard">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            Guardian Portal
+        </a>
+        
+    {% else %}
+        <a class="btn rounded-1 px-4 py-2 fw-bold text-uppercase d-flex align-items-center justify-content-center gap-2" 
+           style="background-color: transparent; color: var(--primary-navy); border: 1px solid var(--primary-navy); font-size: 0.75rem; letter-spacing: 1px; transition: all 0.3s ease;" 
+           onmouseover="this.style.backgroundColor='var(--primary-navy)'; this.style.color='white';"
+           onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--primary-navy)';"
+           href="/login">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            Login
+        </a>
+    {% endif %}
+</li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+<div class="alert alert-{{ category }}-custom alert-dismissible fade show shadow-sm rounded-0 border-0" role="alert">                    <div class="d-flex align-items-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="me-2">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        <strong>Notification:</strong>&nbsp;{{ message }}
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+    <div class="hero">
+        <div class="container text-center text-md-start">
+            <div class="row">
+                <div class="col-lg-8">
+                    <h1 class="display-1 fw-bold mb-4">A Legacy of <br><span style="color: var(--accent-gold);">Compassion.</span></h1>
+                    <p class="lead mb-5 opacity-75 fs-4">Standardizing the transition between life-long companions and responsible guardians.</p>
+                    <a href="#pets" class="btn btn-classic">Browse Available Adoptions</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="mv-section">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-md-6 mandate-box gold-border">
+                    <h6 class="text-uppercase small fw-bold mb-3" style="color: var(--accent-gold); letter-spacing: 3px;">The Mandate</h6>
+                    <h2 class="mb-4">Standardized Care</h2>
+                    <p class="text-muted">We provide a structured, professional digital sanctuary for domestic animals, ensuring every placement occurs within a vetted and stable environment.</p>
+                </div>
+                <div class="col-md-6 mandate-box">
+                    <h6 class="text-uppercase small fw-bold mb-3" style="color: var(--accent-gold); letter-spacing: 3px;">The Vision</h6>
+                    <h2 class="mb-4">A Future Without Abandonment</h2>
+                    <p class="text-muted">Utilizing modern logistics and community education to eliminate pet displacement, creating a world where every pet is treated as a life-long commitment.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container my-5 py-5">
+        <div class="row g-4 mt-2 text-center text-md-start">
+            <div class="col-md-4 value-card">
+                <div class="value-number">01</div>
+                <h5 class="fw-bold text-uppercase small ls-2 mb-3">Integrity</h5>
+                <p class="small text-muted">Complete transparency regarding clinical health records and the behavioral history of every rescue under our management.</p>
+            </div>
+            <div class="col-md-4 value-card">
+                <div class="value-number">02</div>
+                <h5 class="fw-bold text-uppercase small ls-2 mb-3">Compassion</h5>
+                <p class="small text-muted">Professional welfare standards that honor the dignity of every animal throughout the transition to their permanent home.</p>
+            </div>
+            <div class="col-md-4 value-card">
+                <div class="value-number">03</div>
+                <h5 class="fw-bold text-uppercase small ls-2 mb-3">Vigilance</h5>
+                <p class="small text-muted">A rigorous post-adoption framework and support system to ensure the enduring success of our residential placements.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="origin" class="container my-5 py-5 border-top">
+        <div class="row align-items-center g-5">
+            <div class="col-md-6">
+                <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=800&q=80" class="img-fluid journey-img" alt="Sanctuary Office">
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-uppercase fw-bold mb-3" style="color: var(--accent-gold); letter-spacing: 2px;">Established October 2024</h6>
+                <h2 class="display-5 fw-bold mb-4">The Foundation Story</h2>
+                <p class="text-muted mb-4">PetAdopt was founded in San Mateo, Rizal by <strong>Patch</strong>. What began as a localized rescue effort for abandoned kittens has matured into a premier digital welfare agency.</p>
+                <div class="d-flex gap-5">
+                    <div><h3 class="fw-bold mb-0">500+</h3><small class="text-muted text-uppercase smaller">Successful Placements</small></div>
+                    <div><h3 class="fw-bold mb-0">100%</h3><small class="text-muted text-uppercase smaller">Verified Security</small></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container py-5" id="pets">
+    <div class="text-center mb-5">
+        <h6 class="text-uppercase fw-bold mb-2" style="color: var(--accent-gold); letter-spacing: 3px; font-size: 0.7rem;">Ready for Rehoming</h6>
+        <h2 class="display-5 fw-bold" style="color: var(--primary-navy);">The Adoption Gallery</h2>
+        <div style="width:60px; height:3px; background:var(--accent-gold); margin: 20px auto;"></div>
+    </div>
+
+    <div class="row g-4">
+        {% for pet in pets %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card pet-card h-100 border-0 shadow-sm overflow-hidden" style="border-radius: 20px; transition: transform 0.3s ease;">
+                <div class="position-relative overflow-hidden">
+                    <img src="{{ url_for('static', filename='uploads/' + pet.photo) if pet.photo else 'https://via.placeholder.com/400x500' }}" 
+                         class="card-img-top" style="height: 350px; object-fit: cover; transition: transform 0.5s ease;">
+                    
+                    {% if pet.status == 'Available' %}
+                        <span class="badge bg-success position-absolute top-0 end-0 m-3 rounded-pill px-3 py-2 shadow-sm" style="font-size: 0.65rem;">AVAILABLE</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h4 class="fw-bold mb-0" style="color: var(--primary-navy);">{{ pet.name }}</h4>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">{{ pet.breed }}</small>
+                        </div>
+                        <a href="{{ url_for('add_to_cart', pet_id=pet.id) }}" class="btn btn-light rounded-circle p-2 shadow-sm" title="Add to List">
+                            <svg width="20" height="20" fill="var(--accent-gold)" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                        </a>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-4">
+                        <button class="btn btn-outline-dark w-100 rounded-pill fw-bold" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#modal{{ pet.id }}">
+                            VIEW DOSSIER
+                        </button>
+                        <a href="/adopt/{{ pet.id }}" class="btn btn-dark w-100 rounded-pill fw-bold" style="background: var(--primary-navy); font-size: 0.75rem;">
+                            ADOPT NOW
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% endfor %}
+    </div>
+</section>
+
+<style>
+    /* Add to your internal style block */
+    .pet-card:hover { transform: translateY(-10px); }
+    .pet-card:hover img { transform: scale(1.1); }
+</style>
+
+<style>
+    @media (max-width: 991px) {
+    .hero { height: 60vh; border-bottom-width: 5px; }
+    
+    .display-1 { 
+        font-size: calc(2.5rem + 3vw) !important; 
+        line-height: 1.1; 
+    }
+    
+    .hero .lead { font-size: 1.1rem !important; }
+
+    /* Stack the Mandate and Vision boxes */
+    .mv-section { padding: 60px 0; }
+    .mandate-box { 
+        border-left: none !important; 
+        border-top: 1px solid var(--border-light); 
+        padding: 30px 15px !important; 
+    }
+    .mandate-box.gold-border { border-top: 3px solid var(--accent-gold); }
+.mandate-box { 
+        border-left: none !important; 
+        border-top: 2px solid #eee; 
+        padding: 40px 25px !important; /* The '25px' adds the space on the left and right */
+        text-align: left;
+    }
+    
+    /* Ensure the container itself has space from the phone edge */
+    .mv-section .container {
+        padding-left: 25px !important;
+        padding-right: 25px !important;
+    }
+
+    .mandate-box.gold-border { 
+        border-top: 4px solid var(--accent-gold); 
+    }
+}
+
+@media (max-width: 768px) {
+    .pet-card img { height: 300px !important; }
+    
+    .pet-card .card-body { padding: 1.5rem !important; }
+
+    /* Stack the "View Dossier" and "Adopt Now" buttons */
+    .pet-card .d-flex.gap-2 { 
+        flex-direction: column; 
+    }
+    
+    .btn-outline-dark, .btn-dark { 
+        padding: 14px !important; 
+        border-radius: 10px !important; /* Matches your premium aesthetic */
+    }
+}
+
+
+@media (max-width: 767px) {
+    .modal-dialog { margin: 10px; }
+    
+    .modal-content { border-radius: 15px !important; }
+
+    /* Stack the image and info vertically */
+    .modal-body .row.g-0 { flex-direction: column; }
+    
+    .modal-body .col-md-5 { 
+        height: 250px !important; /* Reduce image height on phone */
+        min-height: 250px !important; 
+    }
+    
+    .modal-body .col-md-7 { 
+        padding: 25px !important; 
+    }
+
+    .modal-body h2.display-6 { font-size: 1.5rem !important; }
+
+    /* Grid for breed/age category (2 per row) */
+    .modal-body .row.g-4.mb-4 {
+        row-gap: 20px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    footer { padding-top: 50px; }
+    footer .row.g-5 { text-align: center; }
+    
+    .navbar-brand span { font-size: 1.2rem; }
+    
+    .btn-portal-nav {
+        width: 100%;
+        margin-top: 15px;
+    }
+}
+
+</style>
+
+    <section class="container my-5 py-5 border-top" id="faq">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold">Frequently Asked Questions</h2>
+            <div style="width:60px; height:3px; background:var(--accent-gold); margin: 20px auto;"></div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="accordion" id="faqAccordion">
+                    
+                    <div class="accordion-item border-0 border-bottom mb-3">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button collapsed fw-bold shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" style="color: var(--primary-navy);">
+                                What are your operating hours?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                Our sanctuary is open for scheduled pickups and visits from <strong>Monday to Friday (9:00 AM - 4:00 PM)</strong> and <strong>Saturday (10:00 AM - 2:00 PM)</strong>. We are closed on Sundays to give our staff and animals a day of rest.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item border-0 border-bottom mb-3">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed fw-bold shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" style="color: var(--primary-navy);">
+                                Where are you located?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                We are proudly located in <strong>San Mateo, Rizal, Philippines</strong>. Exact sanctuary directions will be provided in your approval email to ensure the security and privacy of our rescues.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item border-0 border-bottom mb-3">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed fw-bold shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" style="color: var(--primary-navy);">
+                                How does the adoption process work?
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                <ol class="mb-0 ps-3" style="line-height: 2;">
+                                    <li><strong>Create an Account:</strong> Register on our portal to begin your journey.</li>
+                                    <li><strong>Select Companions:</strong> Use <em>"Add to List"</em> if you wish to apply for multiple pets in one unified application, or click <em>"Adopt Now"</em> to proceed immediately with a single pet.</li>
+                                    <li><strong>Submit Application:</strong> Fill out the formal application, answer our questionnaires. Then upload a clear copy of your valid Government ID and home environment photos.</li>
+                                    <li><strong>Review Period:</strong> Wait for our staff to review your application. You will receive an email notification, and your Adopter Dashboard will update to reflect an "Approved" or "Declined" status.</li>
+                                    <li><strong>Schedule Pickup:</strong> Once approved, log in to your dashboard to select an available claiming date and time.</li>
+                                    <li><strong>Claim Your Pet:</strong> Visit the shelter at your scheduled time. <strong>You must bring your physical valid ID</strong> for final verification before taking your new companion home!</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% for pet in pets %}
+<div class="modal fade" id="modal{{ pet.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 20px; overflow: hidden;">
+            
+            <div style="height: 6px; background: var(--accent-gold); width: 100%;"></div>
+
+            <div class="modal-body p-0">
+                <div class="row g-0">
+                    <div class="col-md-5 bg-light d-flex align-items-stretch">
+                        <div class="w-100 position-relative">
+                            <img src="{{ url_for('static', filename='uploads/' + pet.photo) if pet.photo else '' }}" 
+                                 class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 500px;">
+                            
+                            <div class="position-absolute bottom-0 start-0 m-3">
+                                <span class="badge bg-navy text-white px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.6rem; letter-spacing: 1px;">
+                                    REGISTRY ID: #{{ pet.id }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-7 p-5 text-start bg-white">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div>
+                                <small class="text-uppercase fw-bold text-muted ls-2" style="font-size: 0.65rem;">Sanctuary Population Management</small>
+                                <h2 class="display-6 fw-bold mb-0" style="color: var(--primary-navy); font-family: 'Playfair Display', serif;">
+                                    {{ pet.name }}
+                                </h2>
+                                <span class="badge bg-success-soft text-success rounded-0 px-2" style="font-size: 0.6rem; background: #e7f3ef;">
+                                    {{ pet.status|upper }}
+                                </span>
+                            </div>
+                            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                        </div>
+                        
+                        <div class="row g-4 mb-4">
+                            <div class="col-6">
+                                <label class="text-uppercase fw-bold text-muted" style="font-size: 0.55rem; letter-spacing: 1px;">Breed Specification</label>
+                                <div class="fw-bold" style="color: var(--primary-navy);">{{ pet.breed }}</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-uppercase fw-bold text-muted" style="font-size: 0.55rem; letter-spacing: 1px;">Age Category</label>
+                                <div class="fw-bold" style="color: var(--primary-navy);">{{ pet.age_category }}</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-uppercase fw-bold text-muted" style="font-size: 0.55rem; letter-spacing: 1px;">Energy Level</label>
+                                <div class="fw-bold" style="color: var(--primary-navy);">{{ pet.energy_level }}</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-uppercase fw-bold text-muted" style="font-size: 0.55rem; letter-spacing: 1px;">Size Class</label>
+                                <div class="fw-bold" style="color: var(--primary-navy);">{{ pet.size }}</div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 mb-4" style="background: #fdfdfb; border-left: 4px solid var(--accent-gold); border-radius: 4px;">
+                            <h6 class="fw-bold mb-3 text-uppercase" style="font-size: 0.7rem; color: var(--primary-navy); letter-spacing: 1px;">Clinical Record Integrity</h6>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <span class="d-block text-muted" style="font-size: 0.6rem;">Gender</span>
+                                    <strong class="small">{{ pet.gender }}</strong>
+                                </div>
+                                <div class="col-6">
+                                    <span class="d-block text-muted" style="font-size: 0.6rem;">Fixed Status</span>
+                                    <strong class="small">{{ pet.spayed_neutered }}</strong>
+                                </div>
+                                <div class="col-12 mt-2 pt-2 border-top">
+                                    <span class="d-block text-muted mb-1" style="font-size: 0.6rem;">Vaccination Profile</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-success rounded-circle" style="width: 8px; height: 8px;"></div>
+                                        <strong class="small text-navy">{{ pet.vac_status }}</strong>
+                                    </div>
+                                    <small class="text-muted d-block mt-1" style="font-size: 0.65rem;">Updated on: {{ pet.vac_date if pet.vac_date else 'N/A' }}</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-uppercase fw-bold text-muted mb-2" style="font-size: 0.55rem; letter-spacing: 1px;">Clinical Notes & Behavioral Assessment</label>
+                            <p class="small text-muted mb-0" style="font-style: italic; line-height: 1.6;">
+                                "{{ pet.other_description or 'The clinical health registry and behavioral assessment have been completed. Verified for permanent placement.' }}"
+                            </p>
+                        </div>
+
+                        <a href="/adopt/{{ pet.id }}" class="btn btn-sanctuary w-100 py-3 fw-bold">
+                            ADOPT NOW
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<style>
+    .ls-2 { letter-spacing: 2px; }
+    .bg-navy { background-color: var(--primary-navy); }
+    
+    /* Mirroring your Main Register Button */
+    .btn-sanctuary {
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%);
+        color: white !important;
+        border: none;
+        border-radius: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 4px 15px rgba(26, 42, 58, 0.2);
+    }
+
+    .btn-sanctuary:hover {
+        background: linear-gradient(135deg, #c5a059 0%, #d4af37 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(197, 160, 89, 0.4);
+        color: #1a2a3a !important;
+    }
+
+    /* Only apply hover effects if the device has a mouse/pointer */
+@media (hover: hover) {
+    .btn-classic:hover {
+        background: transparent;
+        color: white;
+        border-color: white;
+        transform: translateY(-3px);
+    }
+}
+
+/* Use :active for the immediate "Tap" feel on phones */
+.btn-classic:active {
+    transform: scale(0.95); /* Shrinks slightly immediately when tapped */
+    background-color: var(--accent-hover); /* Changes color instantly on touch */
+    transition: 0s; /* No delay! */
+}
+
+</style>
+
+
+    <footer id="contact" class="pb-5">
+        <div class="container text-center text-md-start">
+            <div class="row g-5">
+                <div class="col-md-4">
+                    <h5>PETADOPT</h5>
+                    <p class="small">Ethical transition of domestic animals into permanent homes. Professional Welfare Standards since 2024.</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>CONTACT</h5>
+                    <p class="small mb-1">📍 San Mateo, Rizal</p>
+                    <p class="small mb-1">📞 +63 912 345 6789</p>
+                    <p class="small">📧 thepetadoption@gmail.com</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>DONATIONS</h5>
+                    <p class="small mb-1">GCash: 09123456789</p>
+                    <p class="small mb-1">BPI: 1234-5678-90</p>
+                    <p class="small">Yce Jedrick Sarabia</p>
+                </div>
+                <div class="col-md-2">
+                <h5>PORTAL</h5>
+                {% if session.get('admin_id') %}
+                    <p class="small mb-1"><a href="/admin/dashboard">Admin Dashboard</a></p>
+                    <p class="small"><a href="/admin/logout">Staff Logout</a></p>
+                {% elif session.get('user_id') %}
+                    <p class="small mb-1"><a href="/dashboard">My Dashboard</a></p>
+                    <p class="small"><a href="/logout">Adopter Logout</a></p>
+                {% else %}
+                    <p class="small mb-1"><a href="/admin/login">Staff Login</a></p>
+                    <p class="small"><a href="/login">Adopter Login</a></p>
+                {% endif %}
+            </div>
+            </div>
+            <div class="footer-divider"></div>
+            <p class="text-center small opacity-40 mt-4" style="font-size: 0.7rem;">&copy; 2026 PetAdopt Philippines. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,304 @@
+{% extends "admin/admin_layout.html" %}
+{% block content %}
+
+
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 p-3 p-md-4 bg-white shadow-sm gap-3" 
+     style="border-radius: 15px; border-left: 5px solid var(--accent-gold);">
+    <div>
+        <h2 class="display-6 fw-bold mb-0" style="color: var(--primary-navy); font-family: 'Playfair Display', serif; letter-spacing: -1px; font-size: calc(1.3rem + 1vw);">
+            Logistics & Appointments
+        </h2>
+        <p class="text-muted small mb-0 text-uppercase ls-1">Sanctuary Operational Command</p>
+    </div>
+    <div class="text-md-end">
+        <span class="badge bg-navy px-4 py-2 shadow-sm rounded-pill w-auto" style="font-size: 0.75rem;">
+            {{ pending_applications|length + scheduled_apps|length }} ACTIVE TASKS
+        </span>
+    </div>
+</div>
+
+<div class="card p-0 mb-5 shadow-sm border-0 overflow-hidden" style="border-radius: 12px;">
+    <div class="bg-light p-3 border-bottom">
+        <h6 class="fw-bold mb-0 text-uppercase small ls-2 text-muted">Awaiting Adopter Approval</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0 custom-logistics-table">
+            <thead class="bg-white d-none d-md-table-header-group">
+                <tr class="x-small text-muted text-uppercase ls-1">
+                    <th class="ps-4 py-3" style="width: 35%;">Adopter Identity</th>
+                    <th style="width: 30%;">Requested Residents</th>
+                    <th class="text-end pe-4">Operational Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in pending_applications %}
+                <tr class="hover-row">
+                    <td class="ps-md-4 py-3">
+                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">
+                            {% if app.user_id %}
+                                <a href="{{ url_for('admin_view_adopter', user_id=app.user_id) }}" class="text-decoration-none text-navy border-bottom border-dashed">
+                                    {{ app.adopter_name }} &nearr;
+                                </a>
+                            {% else %}
+                                <span class="text-muted">{{ app.adopter_name }} <small>(Deleted)</small></span>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted x-small ls-1 text-truncate" style="max-width: 200px;">{{ app.email }}</div>
+                    </td>
+                    <td class="mobile-label" data-label="REQUESTED:">
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for item in app.items %}
+                                <a href="{{ url_for('admin_view_pet', pet_id=item.pet.id) }}" 
+                                   class="badge bg-white border text-decoration-none fw-bold x-small text-navy pet-badge-hover">
+                                    {{ item.pet.name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td class="text-md-end pe-md-4 py-3">
+                        <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                            <button class="btn btn-view-file btn-sm py-2" data-bs-toggle="modal" data-bs-target="#viewAppModal{{ app.id }}">OPEN DOSSIER</button>
+                            <a href="{{ url_for('approve_application', app_id=app.id) }}" class="btn btn-approve-sanctuary btn-sm py-2">APPROVE</a>
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger rounded-0 x-small fw-bold py-2" 
+                                    onclick="openDeclineModal('{{ url_for('decline_application', app_id=app.id) }}')">
+                                DECLINE
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="3" class="text-center py-5 text-muted small italic">No new applications to review.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card p-0 border-0 shadow-sm mb-5" style="border-radius: 12px; border-top: 4px solid var(--accent-gold) !important;">
+    <div class="bg-white p-3 p-md-4 border-bottom">
+        <h5 class="fw-bold mb-0 text-navy h6 h5-md">
+            <svg class="me-2" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"/>
+                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+            </svg> 
+            Sanctuary Daily Schedule
+        </h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 custom-schedule-table">
+            <tbody class="border-top-0">
+                {% for app in scheduled_apps %}
+                <tr style="border-left: 5px solid {% if 'Return' in app.status %}#e74c3c{% else %}#27ae60{% endif %};">
+                    <td class="mobile-label py-2" data-label="ADOPTER:">
+                        <div class="fw-bold fs-6">
+                            {% if app.user_id %}
+                                <a href="{{ url_for('admin_view_adopter', user_id=app.user_id) }}" class="text-decoration-none text-navy border-bottom border-dashed">
+                                    {{ app.adopter_name }} &nearr;
+                                </a>
+                            {% else %}
+                                {{ app.adopter_name }} <small class="text-muted">(Deleted)</small>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted x-small">APP-ID: {{ app.id }}</div>
+                    </td>
+                    <td class="mobile-label py-2" data-label="RESIDENTS:">
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for item in app.items %}
+                                <a href="{{ url_for('admin_view_pet', pet_id=item.pet.id) }}" 
+                                   class="badge border text-decoration-none fw-bold shadow-sm x-small text-navy bg-white pet-badge-hover">
+                                    {{ item.pet.name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td class="py-2">
+                        <span class="badge {% if 'Return' in app.status %}bg-danger{% else %}bg-success{% endif %} ls-1 py-2 px-3 rounded-pill" style="font-size: 0.55rem;">
+                            {{ 'INBOUND / RETURN' if 'Return' in app.status else 'OUTBOUND / CLAIM' }}
+                        </span>
+                    </td>
+                    <td class="text-md-end pe-md-4 py-3">
+                        {% if app.status == 'Return Pending' %}
+                            <a href="{{ url_for('confirm_return', app_id=app.id) }}" class="btn btn-confirm-intake btn-sm w-100 w-md-auto py-2">CONFIRM INTAKE</a>
+                        {% elif app.status == 'Approved' and app.pickup_date %}
+                            <a href="{{ url_for('mark_claimed', app_id=app.id) }}" class="btn btn-navy py-2 px-4 fw-bold x-small shadow-sm w-100 w-md-auto">MARK AS CLAIMED</a>
+                        {% else %}
+                            <span class="badge bg-light text-muted fw-normal italic border px-3 py-2 x-small w-100 w-md-auto">Awaiting Adopter Step</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center py-5 text-muted small italic">No physical appointments scheduled.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% for app in pending_applications %}
+<div class="modal fade" id="viewAppModal{{ app.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <div class="modal-header border-0 bg-navy p-3 p-md-4 text-white sticky-top">
+                <div class="text-truncate">
+                    <h5 class="fw-bold mb-0 text-uppercase ls-2" style="font-size: 0.9rem;">Application Dossier</h5>
+                    <small class="opacity-75">ID-REFERENCE: #APP-{{ app.id }}</small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3 p-md-4 text-start bg-white">
+                <div class="row g-3 g-md-4">
+                    <div class="col-12 col-md-6">
+                        <h6 class="fw-bold text-uppercase x-small ls-2 text-muted mb-3 border-bottom pb-2">I. Adopter Identity</h6>
+                        <div class="d-flex flex-column gap-2 small">
+                            <p class="mb-0 text-break"><strong>Full Name:</strong> {{ app.adopter_name }}</p>
+                            <p class="mb-0 text-break"><strong>Email:</strong> {{ app.email }}</p>
+                            <p class="mb-0"><strong>Contact:</strong> {{ app.phone }}</p>
+                            <p class="mb-0"><strong>Occupation:</strong> {{ app.occupation }}</p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <h6 class="fw-bold text-uppercase x-small ls-2 text-muted mb-3 border-bottom pb-2">II. Environment Check</h6>
+                        <div class="d-flex flex-column gap-2 small">
+                            <p class="mb-0"><strong>Residence:</strong> {{ app.q_home_type }}</p>
+                            <p class="mb-0"><strong>Yard Access:</strong> {{ app.q_yard_access }}</p>
+                            <p class="mb-0"><strong>Household Size:</strong> {{ app.household_size }} Members</p>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <h6 class="fw-bold text-uppercase x-small ls-2 text-muted mb-3 border-bottom pb-2">III. Capability & History</h6>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <div class="p-3 bg-light rounded-3 small h-100">
+                                    <p class="mb-1"><strong>Hours Alone:</strong> {{ app.q_hours_alone }}</p>
+                                    <p class="mb-1"><strong>Other Pets:</strong> {{ app.other_pets }}</p>
+                                    <p class="mb-0"><strong>Financials:</strong> {{ app.financial_readiness }}</p>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="p-3 bg-light rounded-3 small h-100">
+                                    <p class="mb-1"><strong>Past Experience:</strong></p>
+                                    <p class="mb-0 x-small text-muted italic lh-sm">{{ app.q_pet_experience }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <h6 class="fw-bold text-uppercase x-small ls-2 text-muted mb-3 border-bottom pb-2">IV. Documents</h6>
+                        <div class="d-grid d-sm-flex gap-2">
+                            {% if app.id_proof %}
+                                <button type="button" onclick="openImageViewer('{{ url_for('static', filename='uploads/' + app.id_proof) }}')" class="btn btn-view-file py-3 w-100">VIEW GOV ID</button>
+                            {% endif %}
+                            {% if app.home_picture %}
+                                <button type="button" onclick="openImageViewer('{{ url_for('static', filename='uploads/' + app.home_picture) }}')" class="btn btn-view-file py-3 w-100">VIEW HOME PHOTOS</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light p-3 p-md-4 d-flex flex-column flex-sm-row justify-content-sm-between gap-3">
+                <button type="button" class="btn btn-cancel-sanctuary w-100 w-sm-auto order-3 order-sm-1" data-bs-dismiss="modal">CLOSE FILE</button>
+                <div class="d-grid d-sm-flex gap-2 w-100 w-sm-auto order-1 order-sm-2">
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-danger px-4 fw-bold x-small py-3 py-sm-2" 
+                            onclick="openDeclineModal('{{ url_for('decline_application', app_id=app.id) }}')">
+                        DECLINE
+                    </button>
+                    <a href="{{ url_for('approve_application', app_id=app.id) }}" class="btn btn-approve-sanctuary px-4 py-3 py-sm-2 fw-bold">APPROVE ADOPTER</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="modal fade" id="imageViewerModal" tabindex="-1" style="backdrop-filter: blur(10px); background: rgba(0,0,0,0.8);">
+    <div class="modal-dialog modal-xl modal-dialog-centered px-2">
+        <div class="modal-content border-0 bg-transparent">
+            <div class="modal-body position-relative p-0 text-center">
+                <button type="button" class="btn btn-light rounded-circle shadow position-absolute top-0 end-0 m-2 m-md-3" 
+                        data-bs-dismiss="modal" style="z-index: 10; width: 40px; height: 40px; font-size: 1.2rem; line-height: 1;">&times;</button>
+                <img id="fullSizeImage" src="" class="img-fluid rounded shadow-lg" 
+                     style="max-height: 85vh; border: 4px solid white; width: auto;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="declineModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form action="" id="declineForm" method="POST">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Administrative Insight: Decline Application</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small">Please provide a valid reason for declining this application. This will be sent to the adopter and saved in the Audit Log.</p>
+          <textarea name="admin_remarks" class="form-control" rows="4" placeholder="e.g., Home environment not suitable..." required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Confirm & Send Decline Email</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+    .border-dashed { border-bottom: 1px dashed #ccc; }
+    .text-navy { color: var(--primary-navy) !important; }
+    .shrink-0 { flex-shrink: 0; }
+    .pet-badge-hover:hover { border-color: var(--accent-gold) !important; }
+
+    /* Fix for PC drift */
+    @media (min-width: 992px) {
+        .custom-logistics-table, .custom-schedule-table { table-layout: fixed; width: 100%; }
+        .text-md-end { white-space: nowrap; }
+    }
+
+    /* Mobile Transformation Magic */
+    @media (max-width: 767.98px) {
+        .custom-logistics-table, .custom-logistics-table tbody, .custom-logistics-table tr, .custom-logistics-table td,
+        .custom-schedule-table, .custom-schedule-table tbody, .custom-schedule-table tr, .custom-schedule-table td {
+            display: block; width: 100%;
+        }
+        .custom-logistics-table tr, .custom-schedule-table tr { padding: 1.25rem 1rem; border-bottom: 2px solid #f8f9fa !important; }
+        .custom-logistics-table td, .custom-schedule-table td { border: none !important; padding: 0.4rem 0 !important; text-align: left !important; }
+        
+        .mobile-label::before {
+            content: attr(data-label); font-weight: 800; font-size: 0.6rem; color: #999; display: block; text-transform: uppercase; margin-bottom: 2px;
+        }
+        
+        .d-grid { display: grid !important; }
+        .h5-md { font-size: 1rem; }
+    }
+
+    @media (max-width: 576px) {
+        .modal-fullscreen-sm-down { margin: 0; max-width: 100%; height: 100%; }
+        .modal-fullscreen-sm-down .modal-content { height: 100%; border-radius: 0; }
+        .modal-body { overflow-y: auto; }
+    }
+</style>
+
+<script>
+// Logic to handle image viewer
+function openImageViewer(imageSrc) {
+    const imgElement = document.getElementById('fullSizeImage');
+    imgElement.src = imageSrc;
+    const imageModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
+    imageModal.show();
+}
+
+// Logic to handle rejection modal and dynamic form action
+function openDeclineModal(url) {
+    const form = document.getElementById('declineForm');
+    form.action = url;
+    const myModal = new bootstrap.Modal(document.getElementById('declineModal'));
+    myModal.show();
+}
+</script>
+
+{% endblock %}

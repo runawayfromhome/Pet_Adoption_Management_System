@@ -1,0 +1,145 @@
+{% extends "admin/admin_layout.html" %}
+{% block content %}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 p-3 p-md-4 bg-white shadow-sm" 
+     style="border-radius: 15px; border-left: 5px solid var(--accent-gold);">
+    <div class="mb-3 mb-md-0">
+        <h2 class="display-6 fw-bold mb-0" style="color: var(--primary-navy); font-family: 'Playfair Display', serif; letter-spacing: -1px;">
+            Adopter Registry
+        </h2>
+        <p class="text-muted small mb-0 text-uppercase ls-1">Verified Community Database</p>
+    </div>
+    <div class="text-md-end">
+        <span class="badge bg-navy px-4 py-2 shadow-sm rounded-pill w-auto" style="font-size: 0.8rem;">
+            {{ adopters|length }} REGISTERED USERS
+        </span>
+    </div>
+</div>
+
+<div class="card p-3 p-md-4 border-0 shadow-sm mb-4">
+    <form action="{{ url_for('admin_adopters') }}" method="GET" class="row g-2">
+        <div class="col">
+            <input type="text" name="search" class="form-control rounded-0 h-100" placeholder="Search name or email..." value="{{ request.args.get('search', '') }}">
+        </div>
+        <div class="col-auto d-flex gap-2">
+            <button type="submit" class="btn btn-navy rounded-0 px-3 px-md-4 fw-bold">SEARCH</button>
+            {% if request.args.get('search') %}
+                <a href="{{ url_for('admin_adopters') }}" class="btn btn-outline-secondary rounded-0 px-3">CLEAR</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<div class="card p-0 mb-5 shadow-sm border-0 overflow-hidden" style="border-radius: 12px;">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0 custom-mobile-table">
+            <thead class="bg-light d-none d-md-table-header-group">
+                <tr class="x-small text-muted text-uppercase ls-2">
+                    <th class="ps-4 py-3">User Identity</th>
+                    <th>Status</th>
+                    <th>Join Date</th>
+                    <th class="text-end pe-4">File Access</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in adopters %}
+                <tr class="hover-row">
+                    <td class="ps-md-4 py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-navy d-none d-sm-flex align-items-center justify-content-center text-white fw-bold shrink-0" 
+                                 style="width: 40px; height: 40px; font-size: 0.8rem;">
+                                {{ user.full_name[:2]|upper }}
+                            </div>
+                            <div class="text-truncate">
+                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ user.full_name }}</div>
+                                <div class="text-muted x-small ls-1 text-truncate">{{ user.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="mobile-label" data-label="Status:">
+                        {% if user.is_verified %}
+                            <span class="status-stamp stamp-verified">VERIFIED</span>
+                        {% else %}
+                            <span class="status-stamp stamp-pending text-muted">PENDING</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="small text-muted mobile-label" data-label="Joined:">
+                        {{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'Legacy Record' }}
+                    </td>
+
+                    <td class="text-md-end pe-md-4 py-3">
+                        <a href="{{ url_for('admin_view_adopter', user_id=user.id) }}" class="btn btn-dossier-view shadow-sm w-100 w-md-auto">
+                            VIEW PROFILE &nearr;
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center py-5 text-muted small italic">No registered adopters found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container-fluid px-0 mt-3 fixed-bottom p-3" style="z-index: 1050;">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show border-0 shadow-lg mx-auto" style="max-width: 500px;" role="alert">
+             <strong class="text-uppercase x-small ls-1 me-2">Notice:</strong> {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<style>
+    /* Desktop Hover Effect */
+    .hover-row:hover { background-color: #f8f9fa; }
+    .shrink-0 { flex-shrink: 0; }
+
+    /* MOBILE RESPONSIVE MAGIC */
+    @media (max-width: 767.98px) {
+        .custom-mobile-table, 
+        .custom-mobile-table tbody, 
+        .custom-mobile-table tr, 
+        .custom-mobile-table td {
+            display: block;
+            width: 100%;
+        }
+
+        .custom-mobile-table tr {
+            border-bottom: 1px solid #eee;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .custom-mobile-table td {
+            border: none;
+            padding: 0.25rem 0 !important;
+        }
+
+        /* Using data-label for mobile context */
+        .mobile-label::before {
+            content: attr(data-label);
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            color: #999;
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        /* Make the "View Profile" button stand out on mobile */
+        .btn-dossier-view {
+            margin-top: 10px;
+            display: block;
+            text-align: center;
+        }
+    }
+</style>
+
+{% endblock %}

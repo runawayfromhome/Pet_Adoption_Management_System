@@ -1,0 +1,152 @@
+{% extends "admin/admin_layout.html" %}
+{% block content %}
+
+<div class="mb-4">
+    <a href="javascript:history.back()" class="text-decoration-none text-muted small fw-bold text-uppercase d-inline-flex align-items-center">
+        <svg width="14" height="14" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
+        Back to Previous Page
+    </a>
+</div>
+
+<div class="row g-3 g-lg-4">
+    <div class="col-12 col-lg-4">
+        <div class="card p-3 p-md-4 border-0 shadow-sm h-100" style="border-top: 4px solid var(--accent-gold) !important;">
+            <div class="text-center">
+                <img src="{{ url_for('static', filename='uploads/' + pet.photo) if pet.photo else 'https://via.placeholder.com/300' }}" 
+                     class="img-fluid rounded mb-3 shadow-sm" 
+                     style="object-fit: cover; width: 100%; max-height: 350px; aspect-ratio: 1/1;">
+                
+                <h3 class="fw-bold mb-1" style="color: var(--primary-navy);">{{ pet.name }}</h3>
+                <p class="text-muted small text-uppercase mb-3 ls-1">{{ pet.breed }}</p>
+                
+                <div class="mb-3">
+                    <span class="badge {% if pet.status == 'Available' %}bg-success{% elif pet.status == 'Approved' %}bg-navy{% elif pet.status == 'Adopted' %}bg-secondary{% else %}bg-warning text-dark{% endif %} w-100 py-2 rounded-0 text-uppercase" style="letter-spacing: 1.5px; font-size: 0.75rem;">
+                        Status: {{ pet.status }}
+                    </span>
+                </div>
+                
+                <a href="{{ url_for('edit_pet', pet_id=pet.id) }}" class="btn btn-sm btn-outline-secondary w-100 fw-bold rounded-0 py-2" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                    EDIT RECORD
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+        
+        <div class="card p-3 p-md-4 border-0 shadow-sm mb-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2" style="color: var(--primary-navy);">Physical & Medical Profile</h5>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Age</span><br>
+                    <span class="small fw-bold text-dark">{{ pet.age_category }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Gender</span><br>
+                    <span class="small fw-bold text-dark">{{ pet.gender }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Size</span><br>
+                    <span class="small fw-bold text-dark">{{ pet.size }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Energy</span><br>
+                    <span class="small fw-bold text-dark">{{ pet.energy_level }}</span>
+                </div>
+            </div>
+            
+            <div class="row g-3 bg-light p-2 p-md-3 border mx-0 rounded">
+                <div class="col-12 col-md-4 border-bottom border-md-bottom-0 pb-2 pb-md-0">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Vaccination</span><br>
+                    <strong class="small">{{ pet.vac_status }}</strong><br>
+                    <small class="text-muted" style="font-size: 0.65rem;">Date: {{ pet.vac_date if pet.vac_date else 'N/A' }}</small>
+                </div>
+                <div class="col-12 col-md-4 border-bottom border-md-bottom-0 py-2 py-md-0 border-md-start">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Spayed/Neutered</span><br>
+                    <strong class="small">{{ pet.spayed_neutered }}</strong>
+                </div>
+                <div class="col-12 col-md-4 py-2 py-md-0 border-md-start">
+                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Special Needs</span><br>
+                    <strong class="small {% if pet.special_needs and pet.special_needs != 'N/A' and pet.special_needs != 'No' %}text-danger{% endif %}">
+                        {{ pet.special_needs }}
+                    </strong>
+                </div>
+            </div>
+            
+            {% if pet.other_description %}
+            <div class="mt-4 pt-3 border-top">
+                <span class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Behavioral Notes / Description</span>
+                <p class="mb-0 mt-2 small text-dark lh-sm">{{ pet.other_description }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card p-3 p-md-4 border-0 shadow-sm">
+            <h5 class="fw-bold mb-3 border-bottom pb-2" style="color: var(--primary-navy);">Application History</h5>
+            
+            {% if pet.applications %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0" style="min-width: 500px;">
+                        <thead class="table-light">
+                            <tr class="text-muted" style="font-size: 0.65rem; letter-spacing: 1px;">
+                                <th class="py-2">DATE</th>
+                                <th class="py-2">APPLICANT</th>
+                                <th class="py-2">APP ID</th>
+                                <th class="py-2">OUTCOME</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in pet.applications|sort(attribute='application.application_date', reverse=True) %}
+                            <tr>
+                                <td class="small py-3">{{ item.application.application_date.strftime('%b %d, %Y') }}</td>
+                                <td>
+                                    {% if item.application.user_id %}
+                                        <a href="{{ url_for('admin_view_adopter', user_id=item.application.user_id) }}" class="text-decoration-none fw-bold text-navy small">
+                                            {{ item.application.adopter_name }}
+                                        </a>
+                                    {% else %}
+                                        <span class="fw-bold small text-dark">{{ item.application.adopter_name }}</span> <small class="text-muted">(Deleted)</small>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-muted font-monospace" style="font-size: 0.7rem;">#APP-{{ item.application.id }}</td>
+                                <td>
+                                    <span class="badge rounded-0 {% if item.application.status == 'Claimed' %}bg-success{% elif item.application.status == 'Declined' %}bg-danger{% elif 'Return' in item.application.status %}bg-warning text-dark{% else %}bg-secondary{% endif %}" style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                                        {{ item.application.status|upper }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4 bg-light border rounded">
+                    <p class="text-muted small italic mb-0">No adoption applications have been submitted for {{ pet.name }} yet.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .ls-1 { letter-spacing: 1px; }
+    .text-navy { color: var(--primary-navy); }
+    
+    /* Ensure table scrollbar is visible on touch devices */
+    .table-responsive::-webkit-scrollbar {
+        height: 4px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .border-md-start { border-left: 0 !important; }
+        .border-md-bottom-0 { border-bottom: 0 !important; }
+    }
+</style>
+
+{% endblock %}

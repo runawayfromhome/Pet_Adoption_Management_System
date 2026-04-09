@@ -1,0 +1,27 @@
+# --- SECRETS (Most Important) ---
+.env
+client_secret*.json
+# Keep project JSON files like manifest.json and vercel.json
+!manifest.json
+!vercel.json
+
+# --- PYTHON ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.python-version
+
+# --- VIRTUAL ENVIRONMENTS ---
+venv/
+env/
+ENV/
+.venv/
+
+# --- OPERATING SYSTEM ---
+.DS_Store
+Thumbs.db
+
+# --- DATABASE / LOCAL STORAGE ---
+*.db
+*.sqlite3

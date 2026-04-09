@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetAdopt Report | {{ report_date }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root { --primary-navy: #1a2a3a; }
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background-color: #f8f9fa; }
+        
+        /* Layout Improvements */
+        .report-card { border-radius: 0; border: none; }
+        .report-header { border-bottom: 3px solid var(--primary-navy); margin-bottom: 30px; padding-bottom: 10px; }
+        .ls-1 { letter-spacing: 1px; }
+        .bg-navy { background-color: var(--primary-navy) !important; }
+
+        /* Print Logic */
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white !important; padding: 0; }
+            .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+            .table th { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+            .d-print-block { display: block !important; }
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 768px) {
+            .report-card { padding: 1.5rem !important; }
+            .report-header { flex-direction: column; align-items: flex-start !important; text-align: left; }
+            .report-header .text-end { text-align: left !important; margin-top: 15px; width: 100%; border-top: 1px solid #eee; pt-2; }
+            .display-mobile-stack { flex-direction: column; }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container py-3 py-md-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print gap-2">
+        <a href="/admin/dashboard" class="btn btn-sm btn-outline-secondary px-3">
+            <span class="d-none d-sm-inline">← Back to Dashboard</span>
+            <span class="d-sm-none">← Back</span>
+        </a>
+        <button onclick="window.print()" class="btn btn-sm btn-primary bg-navy border-0 px-4 py-2 shadow-sm">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="me-1">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"></path>
+            </svg>
+            Print
+        </button>
+    </div>
+
+    <div class="no-print mb-4 p-3 bg-white shadow-sm border">
+    <form method="GET" action="{{ url_for('monthly_report') }}" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="small fw-bold text-uppercase ls-1">Select Month</label>
+            <select name="month" class="form-select rounded-0">
+                {% for m in range(1, 13) %}
+                <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>
+                    {{ datetime(2000, m, 1).strftime('%B') }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="small fw-bold text-uppercase ls-1">Select Year</label>
+            <select name="year" class="form-select rounded-0">
+                {% for y in range(2024, datetime.utcnow().year + 1) %}
+                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-navy w-100 rounded-0">GENERATE REPORT</button>
+        </div>
+        <div class="col-md-2">
+            <button type="button" onclick="window.print()" class="btn btn-outline-dark w-100 rounded-0">PRINT</button>
+        </div>
+    </form>
+</div>
+
+    <div class="card report-card p-4 p-md-5 shadow-sm border-0">
+        <div class="report-header d-flex justify-content-between align-items-end">
+            <div>
+                <h1 class="fw-bold mb-0" style="color: var(--primary-navy);">PetAdopt Philippines</h1>
+                <p class="text-muted small mb-0 text-uppercase ls-1">Official Monthly Adoption Impact Report</p>
+            </div>
+            <div class="text-md-end mt-3 mt-md-0">
+                <h4 class="fw-bold text-uppercase mb-0">{{ report_date }}</h4>
+                <p class="small text-muted mb-0">Generated: {{ datetime.now().strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="border p-3 text-center bg-light rounded shadow-sm">
+    {# We count the total pets by summing the items in each application #}
+    <h2 class="fw-bold text-success mb-0">
+        {{ applications|map(attribute='items')|map('length')|sum }}
+    </h2>
+    <p class="small text-uppercase mb-0 ls-1 fw-bold text-muted">Successful Adoptions</p>
+</div>
+            </div>
+        </div>
+
+        <h5 class="fw-bold mb-3 small text-uppercase ls-1 text-muted">Record of Placement</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle" style="min-width: 600px;">
+                <thead class="table-light">
+                    <tr class="x-small text-uppercase ls-1" style="font-size: 0.7rem;">
+                        <th class="py-3">Ref ID</th>
+                        <th class="py-3">Pet Name</th>
+                        <th class="py-3">Breed/Species</th>
+                        <th class="py-3">Date Finalized</th>
+                    </tr>
+                </thead>
+                <tbody>
+    {% for app in applications %}
+        {% for item in app.items %}
+        <tr>
+            <td class="small font-monospace text-muted">#APP-{{ app.id }}</td>
+            <td class="fw-bold text-navy">{{ item.pet.name }}</td>
+            <td class="small">{{ item.pet.breed }}</td>
+            <td class="small text-muted">{{ app.claim_date.strftime('%B %d, %Y') }}</td>
+        </tr>
+        {% endfor %}
+    {% else %}
+    <tr>
+        <td colspan="4" class="text-center py-5 text-muted small italic">No finalized adoptions found for this period.</td>
+    </tr>
+    {% endfor %}
+</tbody>
+            </table>
+        </div>
+
+        <div class="mt-5 pt-4 d-none d-print-block">
+            <div class="row align-items-end">
+                <div class="col-6">
+                    <div style="border-top: 2px solid #000; width: 220px; margin-top: 50px;"></div>
+                    <p class="small fw-bold mt-2 mb-0">Authorized Staff Signature</p>
+                    <p class="x-small text-muted">PetAdopt Management Office</p>
+                </div>
+                <div class="col-6 text-end">
+                    <p class="small italic text-muted mb-0">"Creating families, one companion at a time."</p>
+                    <p class="x-small text-muted">© 2024 PetAdopt Philippines</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
