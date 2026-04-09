@@ -12,15 +12,15 @@ A simple and secure web-based platform designed to connect homeless pets with lo
 
 ## 🛠️ Tech Stack
 * **Backend:** Python (Flask)
-* **Database:** SQLite (SQLAlchemy ORM)
+* **Database:** PostgreSQL (Supabase) via SQLAlchemy ORM
 * **Frontend:** HTML5, CSS3, Bootstrap 5
 * **Security:** Werkzeug for secure file uploads and Flask Sessions for Admin auth.
 
 ## 📂 Project Structure
 ```text
 pet_adoption_system/
-├── app.py              # Flask Backend & Database Logic
-├── database.db         # SQLite Database (Auto-generated)
+├── api/index.py        # Flask Backend & Database Logic
+├── .env                # Environment variables (Supabase, Postgres, Mail)
 ├── static/
 │   ├── style.css       # Custom Aesthetic Styling
 │   └── uploads/        # Store for Verified IDs (Git-ignored)

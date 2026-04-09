@@ -188,10 +188,10 @@
                         <h6 class="fw-bold text-uppercase x-small ls-2 text-muted mb-3 border-bottom pb-2">IV. Documents</h6>
                         <div class="d-grid d-sm-flex gap-2">
                             {% if app.id_proof %}
-                                <button type="button" onclick="openImageViewer('{{ url_for('static', filename='uploads/' + app.id_proof) }}')" class="btn btn-view-file py-3 w-100">VIEW GOV ID</button>
+                                <button type="button" onclick="openImageViewer('{{ upload_url(app.id_proof) }}')" class="btn btn-view-file py-3 w-100">VIEW GOV ID</button>
                             {% endif %}
                             {% if app.home_picture %}
-                                <button type="button" onclick="openImageViewer('{{ url_for('static', filename='uploads/' + app.home_picture) }}')" class="btn btn-view-file py-3 w-100">VIEW HOME PHOTOS</button>
+                                <button type="button" onclick="openImageViewer('{{ upload_url(app.home_picture) }}')" class="btn btn-view-file py-3 w-100">VIEW HOME PHOTOS</button>
                             {% endif %}
                         </div>
                     </div>

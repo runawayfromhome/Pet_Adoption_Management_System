@@ -14,7 +14,7 @@
             <tr class="hover-row">
                 <td class="ps-4">
                     <div class="d-flex align-items-center gap-3">
-                        <img src="{{ url_for('static', filename='uploads/' + pet.photo) if pet.photo else url_for('static', filename='images/default-pet.png') }}" 
+                        <img src="{{ upload_url(pet.photo) if pet.photo else url_for('static', filename='images/default-pet.png') }}" 
                              class="rounded shadow-sm" style="width: 45px; height: 45px; object-fit: cover; flex-shrink: 0;">
                         
                         <div>

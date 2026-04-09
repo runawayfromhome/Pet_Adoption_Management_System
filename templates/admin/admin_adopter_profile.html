@@ -118,12 +118,12 @@
                             <h6 class="small fw-bold text-uppercase border-bottom pb-2 text-navy">Attached Documents</h6>
                             <div class="d-grid d-sm-flex gap-2 mt-2">
                                 {% if app.id_proof %}
-                                    <button type="button" onclick="openImageViewer('{{ url_for('static', filename='uploads/' + app.id_proof) }}')" class="btn btn-sm btn-gold-outline w-100">
+                                    <button type="button" onclick="openImageViewer('{{ upload_url(app.id_proof) }}')" class="btn btn-sm btn-gold-outline w-100">
                                         View Government ID
                                     </button>
                                 {% endif %}
                                 {% if app.home_picture %}
-                                    <button type="button" onclick="openImageViewer('{{ url_for('static', filename='uploads/' + app.home_picture) }}')" class="btn btn-sm btn-gold-outline w-100">
+                                    <button type="button" onclick="openImageViewer('{{ upload_url(app.home_picture) }}')" class="btn btn-sm btn-gold-outline w-100">
                                         View Home Picture
                                     </button>
                                 {% endif %}

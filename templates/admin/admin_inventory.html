@@ -113,7 +113,7 @@
                 <tr class="hover-row">
                     <td class="ps-4">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="{{ url_for('static', filename='uploads/' + pet.photo) if pet.photo else '' }}" 
+                            <img src="{{ upload_url(pet.photo) if pet.photo else '' }}" 
                                  class="rounded shadow-sm" style="width: 45px; height: 45px; object-fit: cover; flex-shrink: 0;">
                             <div>
                                 <a href="{{ url_for('admin_view_pet', pet_id=pet.id) }}" class="fw-bold text-decoration-none" style="color: var(--primary-navy);">

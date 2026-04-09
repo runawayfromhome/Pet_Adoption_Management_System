@@ -556,7 +556,7 @@
 
                                     <div class="d-flex align-items-center gap-3">
 
-                                        <img src="{{ url_for('static', filename='uploads/' + pet.photo) if pet.photo else '' }}" class="pet-thumb">
+                                        <img src="{{ upload_url(pet.photo) if pet.photo else '' }}" class="pet-thumb">
 
                                         <div><span class="fw-bold">{{ pet.name }}</span><br>
 
@@ -785,7 +785,7 @@
                                         <div class="modal-header border-0 pb-0"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                                         <div class="modal-body text-center p-4">
                                             <label class="form-label-sm mb-3">Government ID</label>
-                                            <img src="{{ url_for('static', filename='uploads/' + app.id_proof) }}" class="img-fluid border">
+                                            <img src="{{ upload_url(app.id_proof) }}" class="img-fluid border">
                                         </div>
                                     </div>
                                 </div>

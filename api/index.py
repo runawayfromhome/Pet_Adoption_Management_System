@@ -13,40 +13,78 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import select
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv 
+import psycopg2
 from supabase import create_client
 
 load_dotenv() 
 os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-app = Flask(__name__)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static')
+)
 app.secret_key = os.environ.get("SECRET_KEY", "petadopt_secret_2026_key")
+
+
+def upload_url(stored_path):
+    if not stored_path:
+        return ""
+    value = str(stored_path).strip()
+    if value.startswith("http://") or value.startswith("https://"):
+        return value
+    return url_for('static', filename='uploads/' + value)
 
 
 supabase_url = os.environ.get("SUPABASE_URL")
 supabase_key = os.environ.get("SUPABASE_KEY")
+supabase_bucket = os.environ.get("SUPABASE_STORAGE_BUCKET", "pet-assets")
 supabase = None
 if supabase_url and supabase_key:
-    supabase = create_client(supabase_url, supabase_key)
+    try:
+        supabase = create_client(supabase_url, supabase_key)
+    except Exception as exc:
+        print(f"Supabase disabled: {exc}")
+        supabase = None
 
 
 remote_db = os.environ.get('DATABASE_URL')
-if remote_db:
-    if remote_db.startswith("postgres://"):
-        remote_db = remote_db.replace("postgres://", "postgresql://", 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = remote_db
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:@localhost/pet_adoption"
+if not remote_db:
+    raise RuntimeError("DATABASE_URL is required. Configure your Supabase/Postgres connection in .env.")
+
+if remote_db.startswith("postgres://"):
+    remote_db = remote_db.replace("postgres://", "postgresql://", 1)
+
+if not remote_db.startswith("postgresql://"):
+    raise RuntimeError("DATABASE_URL must be a PostgreSQL connection string.")
+
+try:
+    connection = psycopg2.connect(remote_db)
+    connection.close()
+    print("PostgreSQL connection verified.")
+except Exception as exc:
+    raise RuntimeError(f"DATABASE_URL unavailable: {exc}") from exc
+
+app.config['SQLALCHEMY_DATABASE_URI'] = remote_db
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+app.jinja_env.globals['upload_url'] = upload_url
+
+
+def local_upload_path(stored_path):
+    if not stored_path:
+        return None
+    value = str(stored_path).strip()
+    if value.startswith("http://") or value.startswith("https://"):
+        return None
+    return os.path.join(app.config['UPLOAD_FOLDER'], value)
 
 # 3. Now the functions can use the 'supabase' variable safely
 def save_upload(file):
     if not supabase:
         return None, "Supabase client not initialized."
-
-if supabase_url and supabase_key:
-    supabase_client = create_client(supabase_url, supabase_key)
 
 
 
@@ -66,13 +104,11 @@ google = oauth.register(
     client_kwargs={'scope': 'openid email profile'},
 )
 
-upload_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
+upload_dir = os.path.join(app.static_folder, 'uploads')
 os.makedirs(upload_dir, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = upload_dir
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
-
-db = SQLAlchemy(app)
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -80,6 +116,7 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'office@petadopt.ph')
+mail = Mail(app)
 from datetime import datetime
 
 class User(db.Model):
@@ -185,13 +222,28 @@ def save_upload(file):
     if not file or file.filename == "": return None, "No file selected."
     filename = secure_filename(file.filename)
     unique_name = f"{uuid4().hex}_{filename}"
-    
-    # Upload directly to Supabase Storage instead of local folder
-    file_content = file.read()
-    supabase.storage.from_('pet-assets').upload(unique_name, file_content)
-    
-    # Return the public URL instead of just the filename
-    return supabase.storage.from_('pet-assets').get_public_url(unique_name), None
+    file_content = None
+
+    # Prefer Supabase when configured; if upload fails, fall back to local storage.
+    if supabase:
+        try:
+            file_content = file.read()
+            supabase.storage.from_(supabase_bucket).upload(unique_name, file_content)
+            public_url = supabase.storage.from_(supabase_bucket).get_public_url(unique_name)
+            return public_url, None
+        except Exception as exc:
+            print(f"Supabase upload failed ({exc}). Using local upload fallback.")
+
+    try:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+        if file_content is not None:
+            with open(file_path, 'wb') as out:
+                out.write(file_content)
+        else:
+            file.save(file_path)
+        return unique_name, None
+    except Exception as exc:
+        return None, f"Failed to save upload locally: {exc}"
 
 def is_authentic_email(email):
     return re.fullmatch(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email or "")
@@ -348,11 +400,11 @@ def admin_dashboard():
             AdoptionApplication.pickup_date != None),
         AdoptionApplication.status.notin_(["Declined", "Claimed"])
         )
-    ).order_by(db.func.coalesce(AdoptionApplication.pickup_date).asc()).all()
+    ).order_by(AdoptionApplication.pickup_date.asc()).all()
     scheduled = AdoptionApplication.query.filter(
         or_(
             AdoptionApplication.pickup_date != None)
-    ).order_by(db.func.coalesce(AdoptionApplication.pickup_date).asc()).all()
+    ).order_by(AdoptionApplication.pickup_date.asc()).all()
 
     approved_apps = AdoptionApplication.query.filter(AdoptionApplication.approval_date != None).all()
     total_seconds = 0
@@ -432,7 +484,10 @@ def edit_pet(pet_id):
             new_img, err = save_upload(file)
             if not err:
                 if pet.photo: 
-                    try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], pet.photo))
+                    try:
+                        old_path = local_upload_path(pet.photo)
+                        if old_path and os.path.exists(old_path):
+                            os.remove(old_path)
                     except: pass
                 pet.photo = new_img
         db.session.commit()
@@ -448,7 +503,10 @@ def delete_pet(pet_id):
     pet = Pet.query.get_or_404(pet_id)
     pet_name = pet.name
     if pet.photo:
-        try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], pet.photo))
+        try:
+            old_path = local_upload_path(pet.photo)
+            if old_path and os.path.exists(old_path):
+                os.remove(old_path)
         except: pass
     db.session.delete(pet)
     db.session.commit()

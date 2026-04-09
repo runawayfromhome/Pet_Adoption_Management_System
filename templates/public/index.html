@@ -350,7 +350,7 @@
         <div class="col-md-6 col-lg-4">
             <div class="card pet-card h-100 border-0 shadow-sm overflow-hidden" style="border-radius: 20px; transition: transform 0.3s ease;">
                 <div class="position-relative overflow-hidden">
-                    <img src="{{ url_for('static', filename='uploads/' + pet.photo) if pet.photo else 'https://via.placeholder.com/400x500' }}" 
+                    <img src="{{ upload_url(pet.photo) if pet.photo else 'https://via.placeholder.com/400x500' }}" 
                          class="card-img-top" style="height: 350px; object-fit: cover; transition: transform 0.5s ease;">
                     
                     {% if pet.status == 'Available' %}
@@ -556,7 +556,7 @@
                 <div class="row g-0">
                     <div class="col-md-5 bg-light d-flex align-items-stretch">
                         <div class="w-100 position-relative">
-                            <img src="{{ url_for('static', filename='uploads/' + pet.photo) if pet.photo else '' }}" 
+                            <img src="{{ upload_url(pet.photo) if pet.photo else '' }}" 
                                  class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 500px;">
                             
                             <div class="position-absolute bottom-0 start-0 m-3">

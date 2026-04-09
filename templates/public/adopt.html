@@ -147,7 +147,7 @@
 
                 <div class="pet-preview-sm">
                     {% if pet.photo %}
-                    <img src="{{ url_for('static', filename='uploads/' + pet.photo) }}" alt="{{ pet.name }}">
+                    <img src="{{ upload_url(pet.photo) }}" alt="{{ pet.name }}">
                     {% else %}
                     <img src="https://via.placeholder.com/300" alt="{{ pet.name }}">
                     {% endif %}

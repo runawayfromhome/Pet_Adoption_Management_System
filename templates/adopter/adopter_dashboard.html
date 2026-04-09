@@ -246,7 +246,7 @@
                              onmouseover="this.style.backgroundColor='#ffffff'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'" 
                              onmouseout="this.style.backgroundColor='#f8f9fa'; this.style.boxShadow='none'"
                              data-bs-toggle="modal" data-bs-target="#petDetailModal{{ item.pet.id }}">
-                            <img src="{{ url_for('static', filename='uploads/' + item.pet.photo) }}" 
+                            <img src="{{ upload_url(item.pet.photo) }}" 
                                  class="rounded-1 me-3" style="width: 40px; height: 40px; object-fit: cover; border: 1px solid #e0e0e0;">
                             <div class="flex-grow-1">
                                 <span class="fw-bold text-navy d-block" style="font-size: 0.85rem; line-height: 1.2;">{{ item.pet.name }}</span>
@@ -450,14 +450,14 @@
                                 </h6>
                                 <div class="d-grid gap-2">
                                     {% if app.id_proof %}
-                                        <button type="button" onclick="openImageViewer('{{ url_for('static', filename='uploads/' + app.id_proof) }}')" class="btn btn-outline-dark rounded-0 w-100 text-start d-flex justify-content-between align-items-center bg-white" style="border-color: #dcdcdc;">
+                                        <button type="button" onclick="openImageViewer('{{ upload_url(app.id_proof) }}')" class="btn btn-outline-dark rounded-0 w-100 text-start d-flex justify-content-between align-items-center bg-white" style="border-color: #dcdcdc;">
                                             <span class="small fw-bold text-dark text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">View Government ID</span>
                                             <span class="text-muted">&rarr;</span>
                                         </button>
                                     {% endif %}
                                     
                                     {% if app.home_picture %}
-                                        <button type="button" onclick="openImageViewer('{{ url_for('static', filename='uploads/' + app.home_picture) }}')" class="btn btn-outline-dark rounded-0 w-100 text-start d-flex justify-content-between align-items-center bg-white mt-1" style="border-color: #dcdcdc;">
+                                        <button type="button" onclick="openImageViewer('{{ upload_url(app.home_picture) }}')" class="btn btn-outline-dark rounded-0 w-100 text-start d-flex justify-content-between align-items-center bg-white mt-1" style="border-color: #dcdcdc;">
                                             <span class="small fw-bold text-dark text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">View Home Environment</span>
                                             <span class="text-muted">&rarr;</span>
                                         </button>
@@ -556,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="col-md-5 border-end border-light-subtle bg-light">
                         <div class="p-4 d-flex flex-column align-items-center justify-content-center h-100">
                             <div class="border shadow-sm p-2 bg-white mb-3" style="width: 100%; border-color: #dcdcdc !important;">
-                                <img src="{{ url_for('static', filename='uploads/' + item.pet.photo) }}" 
+                                <img src="{{ upload_url(item.pet.photo) }}" 
                                      class="img-fluid rounded-0 w-100" 
                                      style="max-height: 280px; object-fit: cover;">
                             </div>
