@@ -3,8 +3,12 @@
   "functions": {
     "api/index.py": {
       "includeFiles": [
+        "api/templates/**",
+        "api/static/**",
         "templates/**",
-        "static/**"
+        "static/**",
+        "../templates/**",
+        "../static/**"
       ]
     }
   },
