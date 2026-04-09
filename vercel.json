@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "functions": {
-    "api/*.py": {
-      "includeFiles": "api/{templates,static}/**"
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/(.*)",
