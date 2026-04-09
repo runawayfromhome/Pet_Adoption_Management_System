@@ -309,6 +309,18 @@ def index():
                 return render_template('public/index.html', pets=pets)
         except TemplateNotFound as exc:
                 print(f"Template missing at runtime: {exc}. Search dirs: {template_dirs}")
+
+        # Fallback: render homepage template directly from disk if loader misses it.
+        for base in template_dirs:
+            candidate = os.path.join(base, 'public', 'index.html')
+            if os.path.exists(candidate):
+                try:
+                    with open(candidate, 'r', encoding='utf-8') as f:
+                        source = f.read()
+                    return render_template_string(source, pets=pets)
+                except Exception as inner_exc:
+                    print(f"Direct template render failed for {candidate}: {inner_exc}")
+
                 return render_template_string(
                         """
                         <!doctype html>
