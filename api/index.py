@@ -18,7 +18,13 @@ from supabase import create_client
 load_dotenv() 
 os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-app = Flask(__name__)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static')
+)
 app.secret_key = os.environ.get("SECRET_KEY", "petadopt_secret_2026_key")
 
 
@@ -34,6 +40,9 @@ if remote_db:
     if remote_db.startswith("postgres://"):
         remote_db = remote_db.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = remote_db
+elif os.environ.get('VERCEL'):
+    # Vercel serverless file writes are only allowed in /tmp.
+    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////tmp/pet_adoption.db"
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:@localhost/pet_adoption"
 
@@ -66,13 +75,11 @@ google = oauth.register(
     client_kwargs={'scope': 'openid email profile'},
 )
 
-upload_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
+upload_dir = os.path.join(app.static_folder, 'uploads')
 os.makedirs(upload_dir, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = upload_dir
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
-
-db = SQLAlchemy(app)
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -81,6 +88,8 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'office@petadopt.ph')
 from datetime import datetime
+
+mail = Mail(app)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
