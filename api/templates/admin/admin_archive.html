@@ -1,0 +1,153 @@
+{% extends "admin/admin_layout.html" %}
+{% block content %}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 p-3 p-md-4 bg-white shadow-sm" 
+     style="border-radius: 15px; border-left: 5px solid var(--primary-navy);">
+    <div class="mb-3 mb-md-0">
+        <h2 class="display-6 fw-bold mb-0" style="color: var(--primary-navy); font-family: 'Playfair Display', serif; letter-spacing: -1px;">
+            Operational Archive
+        </h2>
+        <p class="text-muted small mb-0 text-uppercase ls-2">Permanent System Audit Trail</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="badge bg-navy px-3 py-2 shadow-sm rounded-pill small">
+            {{ history_apps|length }} RECORDS
+        </span>
+        <a href="{{ url_for('export_history') }}" class="btn btn-outline-secondary btn-sm rounded-0 fw-bold px-3 shadow-sm flex-grow-1 flex-md-grow-0">
+            <svg width="12" height="12" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+            </svg>
+            CSV
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-5 overflow-hidden" style="border-radius: 12px;">
+    <div class="bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 x-small fw-bold ls-2 text-muted text-uppercase">Finalized Transactions</h6>
+        <small class="d-md-none text-muted" style="font-size: 0.6rem;">Scroll right &rarr;</small>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0 table-hover">
+            <thead class="bg-white">
+                <tr class="x-small text-muted text-uppercase ls-1" style="font-size: 0.65rem;">
+                    <th class="ps-4">Application</th>
+                    <th class="d-none d-md-table-cell">Dates (Sub/Appv/Pick)</th> <th class="d-md-none">Submitted</th> <th class="text-end pe-4">Outcome</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in history_apps %}
+                <tr class="hover-row">
+                    <td class="ps-4">
+                        <div class="fw-bold small" style="color: var(--primary-navy);">#APP-{{ app.id }}</div>
+                        <div class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">{{ app.adopter_name }}</div>
+                    </td>
+                    <td class="d-none d-md-table-cell small text-muted">
+                        <div class="d-flex gap-3">
+                            <span><i class="bi bi-file-earmark-plus"></i> {{ app.application_date.strftime('%b %d') }}</span>
+                            <span><i class="bi bi-check-circle"></i> {{ app.approval_date.strftime('%b %d') if app.approval_date else '--' }}</span>
+                            <span><i class="bi bi-calendar-event"></i> {{ app.pickup_date.strftime('%b %d') if app.pickup_date else '--' }}</span>
+                        </div>
+                    </td>
+                    <td class="d-md-none small text-muted">
+                        {{ app.application_date.strftime('%b %d') }}
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="d-flex flex-column align-items-end">
+                            {% if app.status == 'Claimed' %}
+                                <span class="status-stamp stamp-verified py-1 px-2" style="font-size: 0.6rem;">CLAIMED</span>
+                                <small class="x-small text-muted mt-1">{{ app.claim_date.strftime('%b %d') if app.claim_date }}</small>
+                            {% else %}
+                                <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.6rem;">{{ app.status|upper }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center py-5 text-muted small italic">No archived transactions found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 12px;">
+    <div class="bg-navy p-3 text-white">
+        <h6 class="mb-0 x-small fw-bold ls-2 text-uppercase">System Activity Logs</h6>
+    </div>
+    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+        <table class="table align-middle mb-0 custom-logs-table">
+            <thead class="bg-light sticky-top d-none d-md-table-header-group">
+                <tr class="x-small text-muted text-uppercase ls-1">
+                    <th class="ps-4">Timestamp</th>
+                    <th>Staff</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td class="ps-md-4 py-3">
+                        <div class="small text-muted font-monospace d-block d-md-inline" style="font-size: 0.7rem;">
+                            {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </div>
+                        <div class="d-md-none mt-1">
+                             <span class="badge rounded-0 border text-dark fw-bold px-2 py-1" style="font-size: 0.55rem; background: #f8f9fa;">
+                                {{ log.admin_username|upper }}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="d-none d-md-table-cell">
+                        <span class="badge rounded-0 border text-dark fw-bold px-2 py-1" style="font-size: 0.6rem; background: #f8f9fa;">
+                            {{ log.admin_username|upper }}
+                        </span>
+                    </td>
+                    <td class="py-3">
+                        <div class="small text-dark text-wrap" style="max-width: 250px;">
+                            {{ log.action }}
+                            <div class="mt-1">
+                                {% if 'pet' in log.action.lower() or 'resident' in log.action.lower() %}
+                                    <span class="badge bg-info-subtle text-info x-small border-info border" style="font-size: 0.5rem;">INVENTORY</span>
+                                {% elif 'adoption' in log.action.lower() or 'app' in log.action.lower() %}
+                                    <span class="badge bg-success-subtle text-success x-small border-success border" style="font-size: 0.5rem;">LOGISTICS</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="3" class="text-center py-5 text-muted small italic">Security logs are currently empty.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    /* Ensure the table doesn't break on narrow screens */
+    .table-responsive {
+        border: none;
+    }
+    
+    .hover-row:hover { background-color: #fbfbfc; }
+
+    /* Custom Mobile Adjustment for Logs */
+    @media (max-width: 768px) {
+        .custom-logs-table td {
+            padding-top: 0.75rem !important;
+            padding-bottom: 0.75rem !important;
+        }
+        
+        /* Force action text to wrap on small screens */
+        .text-wrap {
+            white-space: normal !important;
+            word-break: break-word;
+        }
+    }
+
+    /* Date column icons (optional, requires bootstrap icons) */
+    .bi { vertical-align: -0.125em; margin-right: 2px; }
+</style>
+
+{% endblock %}

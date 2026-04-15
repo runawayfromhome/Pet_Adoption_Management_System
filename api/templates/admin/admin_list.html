@@ -1,0 +1,220 @@
+{% extends "admin/admin_layout.html" %}
+{% block content %}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 p-3 p-md-4 bg-white shadow-sm gap-3" 
+     style="border-radius: 15px; border-left: 5px solid var(--primary-navy);">
+    <div style="flex: 1;">
+        <h2 class="display-6 fw-bold mb-0" style="color: var(--primary-navy); font-family: 'Playfair Display', serif; letter-spacing: -1px; font-size: calc(1.3rem + 1vw);">
+            Staff Management
+        </h2>
+        <p class="text-muted small mb-0 text-uppercase ls-2">Internal Access Control & Permissions</p>
+    </div>
+    <div class="text-md-end">
+        <button class="btn-sanctuary-primary py-2 px-4 shadow-sm w-100 w-md-auto" style="min-width: 220px;" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+            <svg class="me-2" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+            <span class="small fw-bold">REGISTER NEW STAFF</span>
+        </button>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container-fluid px-0 mb-4">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show rounded-0 border-0 shadow-sm" role="alert">
+          <div class="d-flex align-items-center small">
+             <strong class="text-uppercase x-small ls-1 me-2">Notification:</strong> {{ message }}
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="card border-0 shadow-sm overflow-hidden mb-5" style="border-radius: 12px;">
+    <div class="bg-light p-3 border-bottom">
+        <h6 class="mb-0 x-small fw-bold ls-2 text-muted text-uppercase">Authorized Personnel Directory</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0 custom-staff-table">
+            <thead class="bg-white d-none d-md-table-header-group">
+                <tr class="x-small text-muted text-uppercase ls-1">
+                    <th class="ps-4 py-3" style="width: 400px;">Staff Identity</th>
+                    <th style="width: 250px;">Role / Permissions</th>
+                    <th class="text-end pe-4">Account Security</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in all_admins %}
+                <tr class="hover-row">
+                    <td class="ps-md-4 py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-navy d-flex align-items-center justify-content-center text-white fw-bold shrink-0" 
+                                 style="width: 38px; height: 38px; font-size: 0.75rem;">
+                                {{ admin.username[:2]|upper }}
+                            </div>
+                            <div class="text-truncate">
+                                <span class="fw-bold text-dark d-inline-block">{{ admin.username }}</span>
+                                {% if admin.id|string == session.get('admin_id')|string or admin.username == session.get('username') %}
+                                    <span class="badge bg-navy text-white ms-1 px-2 py-1" style="font-size: 0.55rem; letter-spacing: 1px; border-radius: 4px; vertical-align: middle;">YOU</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="mobile-label py-2" data-label="ROLE / PERMISSIONS:">
+                        <span class="status-stamp {% if admin.is_default %}stamp-verified{% else %}badge bg-light text-muted border{% endif %}" style="font-size: 0.65rem;">
+                            {% if admin.is_default %}SYSTEM ADMIN{% else %}AUTHORIZED STAFF{% endif %}
+                        </span>
+                    </td>
+
+                    <td class="text-md-end pe-md-4 py-3">
+                        <div class="d-grid d-md-inline-flex justify-content-md-end gap-2">
+                            <button class="btn btn-sm btn-outline-dark px-3 fw-bold x-small py-2" style="white-space: nowrap;" data-bs-toggle="modal" data-bs-target="#changePassModal{{ admin.id }}">
+                                CHANGE PASSWORD
+                            </button>
+                            {% if admin.id != session.get('admin_id') and not admin.is_default %}
+                            <button class="btn btn-sm btn-outline-danger px-3 fw-bold x-small py-2" style="white-space: nowrap;" data-bs-toggle="modal" data-bs-target="#revokeModal{{ admin.id }}">
+                                REVOKE ACCESS
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="addStaffModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header border-0 bg-light p-4">
+                <h5 class="fw-bold mb-0">Authorize New Personnel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('add_admin') }}" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase ls-1">System Username</label>
+                        <input type="text" name="username" class="form-control py-2" placeholder="e.g. jdoe_sanctuary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase ls-1">Access Password</label>
+                        <input type="password" name="password" class="form-control py-2" required minlength="8">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold text-muted text-uppercase ls-1">Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-control py-2" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0 d-grid d-sm-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-cancel-sanctuary py-2" data-bs-dismiss="modal">DISCARD</button>
+                    <button type="submit" class="btn btn-commit-sanctuary py-2">CREATE ACCOUNT</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for admin in all_admins %}
+    <div class="modal fade" id="changePassModal{{ admin.id }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header border-0 bg-light p-4">
+                    <h5 class="fw-bold mb-0 text-truncate px-1">Update Credentials: {{ admin.username }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('update_admin_password', admin_id=admin.id) }}" method="POST">
+                    <div class="modal-body p-3 p-md-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">Current Authorization</label>
+                            <input type="password" name="current_password" class="form-control" placeholder="Verify Admin password" required>
+                        </div>
+                        <hr class="my-4 opacity-25">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">New Security Password</label>
+                            <input type="password" name="new_password" class="form-control" required minlength="8">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold text-muted text-uppercase ls-1">Confirm New Password</label>
+                            <input type="password" name="confirm_password" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-3 p-md-4 pt-0 d-grid d-sm-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-cancel-sanctuary py-2" data-bs-dismiss="modal">DISCARD</button>
+                        <button type="submit" class="btn btn-commit-sanctuary py-2">UPDATE PASSWORD</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="revokeModal{{ admin.id }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered px-2">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                <div class="modal-header border-0 bg-danger text-white p-4">
+                    <h6 class="fw-bold mb-0 text-uppercase ls-2">Critical Action</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('delete_admin', admin_id=admin.id) }}" method="POST">
+                    <div class="modal-body p-4 text-center">
+                        <p class="fw-bold mb-1">Permanently revoke access for <br><u class="text-danger">{{ admin.username }}</u>?</p>
+                        <p class="text-muted small mb-4">Irreversible action.</p>
+                        <div class="text-start bg-light p-3 rounded">
+                            <label class="form-label small fw-bold text-uppercase ls-1">Admin Password</label>
+                            <input type="password" name="auth_password" class="form-control" placeholder="Type your password" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0 d-grid gap-2">
+                        <button type="submit" class="btn btn-danger py-2 fw-bold small ls-1 rounded-3">CONFIRM REVOCATION</button>
+                        <button type="button" class="btn btn-outline-secondary py-2 small fw-bold border-0" data-bs-dismiss="modal">CANCEL</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+<style>
+    .shrink-0 { flex-shrink: 0; }
+    
+    /* Anchor the columns on PC */
+    @media (min-width: 992px) {
+        .custom-staff-table { table-layout: fixed; }
+        .text-md-end { white-space: nowrap; }
+    }
+
+    /* Mobile Transformation */
+    @media (max-width: 767.98px) {
+        .custom-staff-table, .custom-staff-table tbody, .custom-staff-table tr, .custom-staff-table td {
+            display: block; width: 100%;
+        }
+        .custom-staff-table tr { padding: 1rem; border-bottom: 1px solid #eee; }
+        .custom-staff-table td { border: none; padding: 0.4rem 0 !important; text-align: left !important; }
+        .mobile-label::before {
+            content: attr(data-label); font-weight: bold; font-size: 0.65rem; color: #999; display: block; margin-bottom: 2px;
+        }
+        .btn-group { display: grid; grid-template-columns: 1fr; width: 100%; }
+    }
+</style>
+
+<script>
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const pass = form.querySelector('input[name*="new_password"], input[name="password"]');
+        const confirm = form.querySelector('input[name="confirm_password"]');
+        if (pass && confirm && pass.value !== confirm.value) {
+            e.preventDefault();
+            alert("Security Error: Passwords do not match.");
+        }
+    });
+});
+</script>
+
+{% endblock %}

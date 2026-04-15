@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings | PetAdopt Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        :root { 
+            --primary-navy: #1a2a3a; 
+            --accent-gold: #c5a059; 
+            --bg-dashboard: #fdfdfb; 
+            --border-light: rgba(0,0,0,0.06); 
+        }
+        
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dashboard); color: #333; }
+        h2, h5 { font-family: 'Playfair Display', serif; }
+        
+        /* Navigation */
+        .nav-adopter { background: #fff; border-bottom: 1px solid var(--border-light); padding: 5px 0; }
+        .portal-logo { letter-spacing: 2px; font-weight: 700; color: var(--primary-navy); text-decoration: none; font-size: 1.1rem; }
+
+        /* Settings Cards */
+        .card-setting { 
+            border: 1px solid var(--border-light); 
+            border-radius: 12px; 
+            background: #fff; 
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        /* Form Styling */
+        .form-label { 
+            font-size: 0.65rem; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            color: var(--accent-gold); 
+            letter-spacing: 1.5px; 
+            margin-bottom: 8px;
+        }
+        
+        .form-control { 
+            border-radius: 8px; 
+            padding: 12px; 
+            border: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-navy);
+            box-shadow: 0 0 0 4px rgba(26, 42, 58, 0.05);
+        }
+
+        /* Buttons */
+        .btn-navy { 
+            background: var(--primary-navy); 
+            color: white; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            padding: 12px 25px;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-navy:hover { 
+            background: #2c3e50; 
+            color: white; 
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-danger-custom {
+            background: #fff;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            padding: 12px 25px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger-custom:hover {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(to right, var(--accent-gold), transparent);
+            margin-bottom: 25px;
+            opacity: 0.3;
+        }
+        
+        .x-small { font-size: 0.65rem; }
+        .ls-1 { letter-spacing: 1px; }
+
+        @media (max-width: 991px) {
+    .col-lg-8 {
+        width: 100% !important;
+        padding: 0 15px;
+    }
+    
+    h2 {
+        font-size: 1.8rem !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .card-setting {
+        padding: 1.5rem !important; /* Slightly tighter padding on mobile */
+    }
+
+    /* Stack the "Set New Password" and "Confirm Password" columns */
+    .row.g-3.mb-4 .col-md-6 {
+        width: 100% !important;
+        margin-bottom: 1rem;
+    }
+
+    /* Make buttons full-width for easier touch access */
+    .btn-navy, .btn-danger-custom {
+        width: 100% !important;
+        margin-top: 10px;
+    }
+
+    .text-end {
+        text-align: center !important; /* Center the buttons on mobile */
+    }
+
+    /* Prevent iOS auto-zoom on inputs */
+    .form-control {
+        font-size: 16px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .nav-adopter .container {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .portal-logo {
+        font-size: 0.9rem;
+    }
+
+    /* Simplify the "Back" button text if it's too cramped */
+    .nav-adopter .btn {
+        width: auto;
+        font-size: 0.6rem;
+    }
+}
+    </style>
+
+    <style>
+    /* THIS FORCES THE SCROLLBAR TO ALWAYS APPEAR */
+    html, body {
+        overflow-y: scroll !important; 
+        height: auto !important;
+    }
+    </style>
+
+</head>
+<body>
+
+<nav id="main-header" class="nav-adopter bg-white fixed-top shadow-sm" 
+     style="border-bottom: 2px solid var(--accent-gold) !important; z-index: 1060; transition: transform 0.3s ease-in-out;">
+    
+    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center py-3">
+        
+        <div class="d-flex align-items-center justify-content-center">
+            <a href="/" class="portal-logo font-playfair me-md-4 pe-md-4 border-md-end mb-2 mb-md-0" 
+               style="border-color: #eaeaea !important; text-decoration: none; line-height: 1;">
+                PETADOPT <span style="color: var(--accent-gold);">PORTAL</span>
+            </a>
+        </div>
+        
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="d-none d-md-flex align-items-center gap-2 me-3 pe-3 border-end border-2">
+                <div class="bg-light border d-flex align-items-center justify-content-center rounded-circle text-navy fw-bold shadow-sm" 
+                     style="width: 38px; height: 38px; font-size: 0.9rem;">
+                    {{ user.full_name[:1]|upper }}
+                </div>
+                <div class="text-start" style="line-height: 1.1;">
+                    <span class="d-block fw-bold text-navy" style="font-size: 0.85rem;">{{ user.full_name }}</span>
+                    <span class="text-uppercase text-muted fw-semibold" style="font-size: 0.6rem; letter-spacing: 1px;">Account Settings</span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a class="btn rounded-1 px-3 py-2 fw-bold text-uppercase d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+                   style="background-color: white; color: var(--primary-navy); border: 1px solid #dcdcdc; font-size: 0.75rem; letter-spacing: 1px; transition: all 0.3s ease;" 
+                   onmouseover="this.style.borderColor='var(--primary-navy)'; this.style.backgroundColor='#f8f9fa';"
+                   onmouseout="this.style.borderColor='#dcdcdc'; this.style.backgroundColor='white';"
+                   href="/dashboard">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Return
+                </a>
+
+                <a class="btn rounded-1 px-3 py-2 fw-bold text-uppercase d-flex align-items-center justify-content-center gap-2" 
+                   style="background-color: transparent; color: var(--primary-navy); border: 1px solid #dcdcdc; font-size: 0.75rem; letter-spacing: 1px; transition: all 0.3s ease;" 
+                   onmouseover="this.style.backgroundColor='#fff5f5'; this.style.color='#dc3545'; this.style.borderColor='#dc3545';"
+                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--primary-navy)'; this.style.borderColor='#dcdcdc';"
+                   href="/logout">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    Sign Out
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="header-spacer" style="height: 85px;"></div>
+<div class="mt-5"></div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} rounded-3 mb-4 small shadow-sm border-0 border-start border-4 border-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card p-4 p-md-5 bg-white rounded-3 border-0 mb-4" style="box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+    
+    <div class="d-flex align-items-center mb-4 pb-3 border-bottom" style="border-color: #f0f0f0 !important;">
+        <div class="d-flex align-items-center justify-content-center rounded-circle me-3" style="width: 42px; height: 42px; background-color: rgba(26, 42, 58, 0.05); color: var(--primary-navy);">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+        </div>
+        <div>
+            <h5 class="fw-bold mb-0 font-playfair" style="color: var(--primary-navy);">Personal Identity</h5>
+            <span class="text-muted d-block mt-1 text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">Primary Guardian Details</span>
+        </div>
+    </div>
+
+    <form action="{{ url_for('adopter_profile') }}" method="POST">
+        
+        <div class="mb-4">
+            <label class="form-label d-block fw-bold" style="font-size: 0.65rem; text-transform: uppercase; color: var(--primary-navy); letter-spacing: 1.5px; margin-bottom: 8px;">Full Legal Name</label>
+            <input type="text" name="name" class="form-control shadow-none" value="{{ user.full_name }}" required
+                   style="border: 1px solid #e4e4e4; border-left: 3px solid transparent; background-color: #fafafa; padding: 12px 16px; font-size: 0.9rem; transition: all 0.3s ease;"
+                   onfocus="this.style.backgroundColor='#fff'; this.style.borderLeftColor='var(--accent-gold)'; this.style.borderColor='#dcdcdc'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.03)';"
+                   onblur="this.style.backgroundColor='#fafafa'; this.style.borderLeftColor='transparent'; this.style.borderColor='#e4e4e4'; this.style.boxShadow='none';">
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label d-block fw-bold" style="font-size: 0.65rem; text-transform: uppercase; color: var(--primary-navy); letter-spacing: 1.5px; margin-bottom: 8px;">Email Address</label>
+            <input type="email" name="email" class="form-control shadow-none" value="{{ user.email }}" required
+                   style="border: 1px solid #e4e4e4; border-left: 3px solid transparent; background-color: #fafafa; padding: 12px 16px; font-size: 0.9rem; transition: all 0.3s ease;"
+                   onfocus="this.style.backgroundColor='#fff'; this.style.borderLeftColor='var(--accent-gold)'; this.style.borderColor='#dcdcdc'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.03)';"
+                   onblur="this.style.backgroundColor='#fafafa'; this.style.borderLeftColor='transparent'; this.style.borderColor='#e4e4e4'; this.style.boxShadow='none';">
+            
+            <div class="form-text text-muted italic mt-2" style="font-size: 0.7rem;">
+                <svg width="12" height="12" fill="var(--accent-gold)" class="me-1" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.308.533.19 0 .452-.084.826-.323l-.101-.427c-.154.1-.313.153-.476.153-.226 0-.294-.207-.233-.478l.991-4.707c.06-.262-.112-.43-.398-.43-.252 0-.527.114-.837.343l-.694.51c-.073.054-.099.124-.008.227l.356.411c.08.093.203.064.269-.01l.453-.346a.273.273 0 0 1 .411.042z"/></svg>
+                <span style="color: var(--primary-navy); font-weight: 600;">Note:</span> Changing your email will require system re-verification.
+            </div>
+        </div>
+
+        <div class="text-end pt-3 mt-4 border-top" style="border-color: #f0f0f0 !important;">
+            <button type="submit" class="btn rounded-2 px-4 py-2 fw-bold text-uppercase" 
+                    style="background-color: var(--primary-navy); color: white; border: none; font-size: 0.75rem; letter-spacing: 1px; transition: all 0.3s ease;"
+                    onmouseover="this.style.backgroundColor='var(--accent-gold)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 15px rgba(197, 160, 89, 0.3)';" 
+                    onmouseout="this.style.backgroundColor='var(--primary-navy)'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                Save Profile Changes
+            </button>
+        </div>
+        
+    </form>
+</div>
+
+            <div class="card p-4 p-md-5 bg-white rounded-3 border-0 mb-4" style="box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+    
+    <div class="d-flex align-items-center mb-4 pb-3 border-bottom" style="border-color: #f0f0f0 !important;">
+        <div class="d-flex align-items-center justify-content-center rounded-circle me-3" style="width: 42px; height: 42px; background-color: rgba(26, 42, 58, 0.05); color: var(--primary-navy);">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+        <div>
+            <h5 class="fw-bold mb-0 font-playfair" style="color: var(--primary-navy);">Access Security</h5>
+            <span class="text-muted d-block mt-1 text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">Authentication & Keys</span>
+        </div>
+    </div>
+
+    <form action="{{ url_for('adopter_password') }}" method="POST">
+        
+        {# Logic: If the user hasn't set a password, hide the "Current" field #}
+        {% if user.password_hash and user.password_hash.startswith('pbkdf2:sha256') %}
+            <div class="mb-4">
+                <label class="form-label d-block fw-bold" style="font-size: 0.65rem; text-transform: uppercase; color: var(--primary-navy); letter-spacing: 1.5px; margin-bottom: 8px;">Current Security Key</label>
+                <div class="input-group">
+                    <input type="password" name="current_password" class="form-control shadow-none" placeholder="••••••••" required
+                           style="border: 1px solid #e4e4e4; border-right: none; border-left: 3px solid transparent; background-color: #fafafa; padding: 12px 16px; font-size: 0.9rem; transition: all 0.3s ease;"
+                           onfocus="this.style.backgroundColor='#fff'; this.style.borderLeftColor='var(--accent-gold)'; this.style.borderColor='#dcdcdc'; this.nextElementSibling.style.borderColor='#dcdcdc'; this.nextElementSibling.style.backgroundColor='#fff';"
+                           onblur="this.style.backgroundColor='#fafafa'; this.style.borderLeftColor='transparent'; this.style.borderColor='#e4e4e4'; this.nextElementSibling.style.borderColor='#e4e4e4'; this.nextElementSibling.style.backgroundColor='#fafafa';">
+                    <button class="btn" type="button" onclick="togglePassword(this)" 
+                            style="border: 1px solid #e4e4e4; border-left: none; background-color: #fafafa; color: var(--primary-navy); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; padding: 0 16px; transition: all 0.3s ease;">
+                        Show
+                    </button>
+                </div>
+            </div>
+        {% else %}
+            <div class="d-flex align-items-start p-3 mb-4 rounded-2" style="background-color: #fdfbf7; border: 1px solid #f0e6d2; border-left: 3px solid var(--accent-gold);">
+                <svg width="18" height="18" fill="var(--accent-gold)" class="me-3 mt-1" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.308.533.19 0 .452-.084.826-.323l-.101-.427c-.154.1-.313.153-.476.153-.226 0-.294-.207-.233-.478l.991-4.707c.06-.262-.112-.43-.398-.43-.252 0-.527.114-.837.343l-.694.51c-.073.054-.099.124-.008.227l.356.411c.08.093.203.064.269-.01l.453-.346a.273.273 0 0 1 .411.042z"/></svg>
+                <div>
+                    <span class="d-block small fw-bold text-uppercase mb-1" style="letter-spacing: 0.5px; color: var(--primary-navy);">External Authentication</span>
+                    <span class="text-muted" style="font-size: 0.75rem; line-height: 1.5; display: block;">You are currently using Google Login. You can establish a security key below if you wish to log in directly using your email in the future.</span>
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label class="form-label d-block fw-bold" style="font-size: 0.65rem; text-transform: uppercase; color: var(--primary-navy); letter-spacing: 1.5px; margin-bottom: 8px;">New Security Key</label>
+                <div class="input-group">
+                    <input type="password" name="new_password" class="form-control shadow-none" required minlength="8"
+                           style="border: 1px solid #e4e4e4; border-right: none; border-left: 3px solid transparent; background-color: #fafafa; padding: 12px 16px; font-size: 0.9rem; transition: all 0.3s ease;"
+                           onfocus="this.style.backgroundColor='#fff'; this.style.borderLeftColor='var(--accent-gold)'; this.style.borderColor='#dcdcdc'; this.nextElementSibling.style.borderColor='#dcdcdc'; this.nextElementSibling.style.backgroundColor='#fff';"
+                           onblur="this.style.backgroundColor='#fafafa'; this.style.borderLeftColor='transparent'; this.style.borderColor='#e4e4e4'; this.nextElementSibling.style.borderColor='#e4e4e4'; this.nextElementSibling.style.backgroundColor='#fafafa';">
+                    <button class="btn" type="button" onclick="togglePassword(this)" 
+                            style="border: 1px solid #e4e4e4; border-left: none; background-color: #fafafa; color: var(--primary-navy); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; padding: 0 16px; transition: all 0.3s ease;">
+                        Show
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label d-block fw-bold" style="font-size: 0.65rem; text-transform: uppercase; color: var(--primary-navy); letter-spacing: 1.5px; margin-bottom: 8px;">Confirm Security Key</label>
+                <div class="input-group">
+                    <input type="password" name="confirm_password" class="form-control shadow-none" required
+                           style="border: 1px solid #e4e4e4; border-right: none; border-left: 3px solid transparent; background-color: #fafafa; padding: 12px 16px; font-size: 0.9rem; transition: all 0.3s ease;"
+                           onfocus="this.style.backgroundColor='#fff'; this.style.borderLeftColor='var(--accent-gold)'; this.style.borderColor='#dcdcdc'; this.nextElementSibling.style.borderColor='#dcdcdc'; this.nextElementSibling.style.backgroundColor='#fff';"
+                           onblur="this.style.backgroundColor='#fafafa'; this.style.borderLeftColor='transparent'; this.style.borderColor='#e4e4e4'; this.nextElementSibling.style.borderColor='#e4e4e4'; this.nextElementSibling.style.backgroundColor='#fafafa';">
+                    <button class="btn" type="button" onclick="togglePassword(this)" 
+                            style="border: 1px solid #e4e4e4; border-left: none; background-color: #fafafa; color: var(--primary-navy); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; padding: 0 16px; transition: all 0.3s ease;">
+                        Show
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-end pt-3 mt-4 border-top" style="border-color: #f0f0f0 !important;">
+            <button type="submit" class="btn rounded-2 px-4 py-2 fw-bold text-uppercase" 
+                    style="background-color: var(--primary-navy); color: white; border: none; font-size: 0.75rem; letter-spacing: 1px; transition: all 0.3s ease;"
+                    onmouseover="this.style.backgroundColor='var(--accent-gold)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 15px rgba(197, 160, 89, 0.3)';" 
+                    onmouseout="this.style.backgroundColor='var(--primary-navy)'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                {{ 'UPDATE SECURITY KEY' if user.password_hash else 'CREATE SECURITY KEY' }}
+            </button>
+        </div>
+    </form>
+</div>
+
+            <div class="card p-4 p-md-5 bg-white rounded-3 border-0 mb-4" style="box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+    
+    <div class="d-flex align-items-center mb-4 pb-3 border-bottom" style="border-color: #f0f0f0 !important;">
+        <div class="d-flex align-items-center justify-content-center rounded-circle me-3" style="width: 42px; height: 42px; background-color: rgba(220, 53, 69, 0.08); color: #dc3545;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        <div>
+            <h5 class="fw-bold mb-0 font-playfair" style="color: #dc3545;">Critical Actions</h5>
+            <span class="text-muted d-block mt-1 text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">System Deactivation</span>
+        </div>
+    </div>
+
+    <p class="text-muted mb-4" style="font-size: 0.85rem; line-height: 1.6;">
+        Termination of your account is <strong style="color: #dc3545;">permanent and irreversible</strong>. While your past adoption records are retained for legal and medical compliance, you will immediately lose all access to this portal.
+    </p>
+
+    <form action="{{ url_for('delete_account') }}" method="POST" onsubmit="return confirm('Are you absolutely sure? This action cannot be undone.');">
+        <button type="submit" class="btn rounded-2 w-100 fw-bold text-uppercase" 
+                style="background-color: white; color: #dc3545; border: 1px solid #dc3545; font-size: 0.75rem; letter-spacing: 1px; padding: 12px; transition: all 0.3s ease;"
+                onmouseover="this.style.backgroundColor='#dc3545'; this.style.color='white'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 15px rgba(220, 53, 69, 0.2)';" 
+                onmouseout="this.style.backgroundColor='white'; this.style.color='#dc3545'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            Permanently Terminate Account
+        </button>
+    </form>
+</div>
+
+        </div> </div> </div> ```
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function togglePassword(button) {
+        // Find the input field that is right before this button's group
+        // Since it's in an input-group, we look for the input within the same parent
+        const input = button.parentElement.querySelector('input');
+        
+        if (input.type === "password") {
+            input.type = "text";
+            button.textContent = "Hide";
+            button.classList.replace('btn-outline-secondary', 'btn-secondary');
+        } else {
+            input.type = "password";
+            button.textContent = "Show";
+            button.classList.replace('btn-secondary', 'btn-outline-secondary');
+        }
+    }
+</script>
+
+<script>
+    let lastScrollTop = 0;
+    const header = document.getElementById('main-header');
+
+    window.addEventListener('scroll', function() {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // 1. If scrolling down AND we have scrolled past the header height
+        if (scrollTop > lastScrollTop && scrollTop > 100) {
+            header.classList.add('header-hidden');
+        } 
+        // 2. If scrolling up
+        else {
+            header.classList.remove('header-hidden');
+        }
+        
+        // Update lastScrollTop for the next scroll event
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; 
+    }, false);
+
+    // Your existing togglePassword function...
+    function togglePassword(button) {
+        const input = button.parentElement.querySelector('input');
+        if (input.type === "password") {
+            input.type = "text";
+            button.textContent = "Hide";
+        } else {
+            input.type = "password";
+            button.textContent = "Show";
+        }
+    }
+</script>
+
+</body>
+</html>
