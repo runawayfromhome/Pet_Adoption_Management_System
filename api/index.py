@@ -155,11 +155,22 @@ def normalize_and_validate_db_url(raw_url):
     return db_url
 
 
-supabase_db_url = normalize_and_validate_db_url(
-    os.environ.get("SUPABASE_DB_URL") or os.environ.get("DATABASE_URL")
-)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = supabase_db_url
+startup_config_error = None
+startup_db_error = None
+supabase_db_url = None
+try:
+    supabase_db_url = normalize_and_validate_db_url(
+        os.environ.get("SUPABASE_DB_URL") or os.environ.get("DATABASE_URL")
+    )
+    app.config['SQLALCHEMY_DATABASE_URI'] = supabase_db_url
+except RuntimeError as config_error:
+    startup_config_error = str(config_error)
+    print(f"[ERROR] Startup configuration issue: {startup_config_error}")
+    # Fallback keeps app import alive so /healthz can expose the real issue.
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+        "FALLBACK_SQLALCHEMY_DATABASE_URI",
+        "sqlite:///:memory:",
+    )
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -389,54 +400,99 @@ def ensure_legacy_schema_columns():
         },
     )
 
+
+def get_startup_issue():
+    return startup_config_error or startup_db_error
+
+
+def build_db_connection_error_message(err_text, db_host):
+    if (
+        "authentication failed" in err_text
+        or "too many authentication errors" in err_text
+        or "circuit breaker open" in err_text
+    ):
+        return (
+            f"Supabase rejected DB credentials for host '{db_host}'. "
+            "Verify DB username/password in SUPABASE_DB_URL. "
+            "For pooler (:6543), username is typically 'postgres.<project-ref>'; "
+            "for direct DB (:5432), username is typically 'postgres'. "
+            "If many bad logins were attempted, wait 1-2 minutes for the pooler circuit breaker to reset."
+        )
+
+    if "could not translate host name" in err_text:
+        return (
+            f"Could not resolve Supabase Postgres host '{db_host}'. "
+            "Check project ref in SUPABASE_DB_URL and your DNS/network settings."
+        )
+
+    return (
+        f"Could not connect to Supabase Postgres host '{db_host}'. "
+        "Check SUPABASE_DB_URL, DB credentials, internet connection, and DNS/network settings."
+    )
+
 with app.app_context():
-    try:
-        if RUN_STARTUP_SCHEMA_SYNC:
-            db.create_all()
-            ensure_legacy_schema_columns()
-            admin_exists = db.session.execute(select(AdminUser).filter_by(username="admin")).scalar()
-            if not admin_exists:
-                db.session.add(AdminUser(
-                    username="admin", 
-                    password_hash=generate_password_hash("password123"), 
-                    force_password_change=True, 
-                    is_default=True
-                ))
-                db.session.commit()
-        else:
-            # On serverless deployments, skip schema mutations and only verify connectivity.
-            db.session.execute(text("SELECT 1"))
-    except OperationalError as e:
-        db_host = urlparse(supabase_db_url).hostname or "unknown host"
-        err_text = str(getattr(e, "orig", e)).lower()
+    if startup_config_error:
+        print("[WARN] Skipping DB bootstrap due to startup configuration issue.")
+    else:
+        try:
+            if RUN_STARTUP_SCHEMA_SYNC:
+                db.create_all()
+                ensure_legacy_schema_columns()
+                admin_exists = db.session.execute(select(AdminUser).filter_by(username="admin")).scalar()
+                if not admin_exists:
+                    db.session.add(AdminUser(
+                        username="admin", 
+                        password_hash=generate_password_hash("password123"), 
+                        force_password_change=True, 
+                        is_default=True
+                    ))
+                    db.session.commit()
+            elif not IS_VERCEL:
+                # Keep local startup check, but avoid network-dependent cold-start checks on Vercel.
+                db.session.execute(text("SELECT 1"))
+        except OperationalError as e:
+            db_host = urlparse(supabase_db_url or "").hostname or "unknown host"
+            err_text = str(getattr(e, "orig", e)).lower()
+            startup_db_error = build_db_connection_error_message(err_text, db_host)
+            if IS_VERCEL:
+                print(f"[ERROR] {startup_db_error}")
+            else:
+                raise RuntimeError(startup_db_error) from e
 
-        if (
-            "authentication failed" in err_text
-            or "too many authentication errors" in err_text
-            or "circuit breaker open" in err_text
-        ):
-            raise RuntimeError(
-                f"Supabase rejected DB credentials for host '{db_host}'. "
-                "Verify DB username/password in SUPABASE_DB_URL. "
-                "For pooler (:6543), username is typically 'postgres.<project-ref>'; "
-                "for direct DB (:5432), username is typically 'postgres'. "
-                "If many bad logins were attempted, wait 1-2 minutes for the pooler circuit breaker to reset."
-            ) from e
 
-        if "could not translate host name" in err_text:
-            raise RuntimeError(
-                f"Could not resolve Supabase Postgres host '{db_host}'. "
-                "Check project ref in SUPABASE_DB_URL and your DNS/network settings."
-            ) from e
+@app.route('/healthz')
+def healthz():
+    issue = get_startup_issue()
+    return {
+        "ok": issue is None,
+        "is_vercel": IS_VERCEL,
+        "startup_schema_sync": RUN_STARTUP_SCHEMA_SYNC,
+        "db_url_configured": bool(supabase_db_url),
+        "supabase_url_configured": bool(supabase_url),
+        "storage_client_ready": bool(supabase),
+        "startup_issue": issue,
+    }, (200 if issue is None else 503)
 
-        raise RuntimeError(
-            f"Could not connect to Supabase Postgres host '{db_host}'. "
-            "Check SUPABASE_DB_URL, DB credentials, internet connection, and DNS/network settings."
-        ) from e
+
+@app.route('/favicon.ico')
+def favicon():
+    return Response(status=204)
 
 @app.route('/')
 def index():
-    return render_template('public/index.html', pets=Pet.query.filter_by(status="Available").all())
+    issue = get_startup_issue()
+    if issue:
+        print(f"[WARN] Serving index in degraded mode: {issue}")
+        return render_template('public/index.html', pets=[]), 503
+
+    try:
+        pets = Pet.query.filter_by(status="Available").all()
+    except OperationalError as e:
+        db.session.rollback()
+        print(f"[ERROR] Failed loading pets for index route: {e}")
+        return render_template('public/index.html', pets=[]), 503
+
+    return render_template('public/index.html', pets=pets)
 
 @app.route('/adopt/<int:pet_id>', methods=['GET', 'POST'])
 def adopt(pet_id):
