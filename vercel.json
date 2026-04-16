@@ -5,7 +5,12 @@
       "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
-        "includeFiles": "templates/**"
+        "includeFiles": [
+          "api/templates/**",
+          "api/static/**",
+          "templates/**",
+          "static/**"
+        ]
       }
     }
   ],
