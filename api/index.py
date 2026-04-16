@@ -2,6 +2,7 @@ import os
 import re
 import csv
 from io import StringIO
+from urllib.parse import urlparse, unquote
 from flask import Response
 from datetime import datetime, timedelta
 from uuid import uuid4
@@ -10,7 +11,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from sqlalchemy import select
+from sqlalchemy import select, inspect, text
+from sqlalchemy.exc import OperationalError
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv 
 from supabase import create_client
@@ -22,33 +24,124 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "petadopt_secret_2026_key")
 
 
+SUPABASE_STORAGE_BUCKET = os.environ.get("SUPABASE_STORAGE_BUCKET", "pet-assets")
+
+
+def resolve_supabase_key():
+    # Prefer server-side keys first, but keep legacy env names for backward compatibility.
+    key_candidates = (
+        ("SUPABASE_SECRET_KEY", os.environ.get("SUPABASE_SECRET_KEY")),
+        ("SUPABASE_SERVICE_ROLE_KEY", os.environ.get("SUPABASE_SERVICE_ROLE_KEY")),
+        ("SUPABASE_KEY", os.environ.get("SUPABASE_KEY")),
+        ("SUPABASE_PUBLISHABLE_KEY", os.environ.get("SUPABASE_PUBLISHABLE_KEY")),
+        ("SUPABASE_ANON_KEY", os.environ.get("SUPABASE_ANON_KEY")),
+    )
+    for source_name, key_value in key_candidates:
+        if key_value and key_value.strip():
+            return key_value.strip(), source_name
+    return None, None
+
+
+def is_placeholder_value(value):
+    placeholder_tokens = ("your-", "[your", "changeme", "example")
+    return any(token in value.lower() for token in placeholder_tokens)
+
+
+def is_likely_malformed_supabase_key(value):
+    key = value.strip()
+    # New keys use sb_publishable_... / sb_secret_... and are significantly longer than sample stubs.
+    if key.startswith("sb_"):
+        return len(key) < 60
+    # Legacy anon/service_role keys are JWTs (header.payload.signature).
+    return key.count(".") != 2
+
+
 supabase_url = os.environ.get("SUPABASE_URL")
-supabase_key = os.environ.get("SUPABASE_KEY")
+supabase_key, supabase_key_source = resolve_supabase_key()
 supabase = None
 if supabase_url and supabase_key:
-    supabase = create_client(supabase_url, supabase_key)
+    if is_placeholder_value(supabase_key):
+        print("[WARN] Supabase key looks like a placeholder. Upload features will be disabled until a real key is set.")
+    elif is_likely_malformed_supabase_key(supabase_key):
+        print(
+            f"[WARN] Supabase key from {supabase_key_source} looks malformed or truncated "
+            f"(prefix={supabase_key[:12]}..., length={len(supabase_key)}). "
+            "Upload features will be disabled until a full valid key is set."
+        )
+    else:
+        try:
+            supabase = create_client(supabase_url, supabase_key)
+            try:
+                # Lightweight readiness check so upload issues surface at startup.
+                supabase.storage.from_(SUPABASE_STORAGE_BUCKET).list("", {"limit": 1})
+            except Exception as storage_error:
+                print(
+                    f"[WARN] Supabase storage check failed for bucket '{SUPABASE_STORAGE_BUCKET}': {storage_error}. "
+                    "Upload requests may fail until bucket permissions/settings are fixed."
+                )
+        except Exception as e:
+            err_text = str(e)
+            if "invalid api key" in err_text.lower():
+                print(
+                    f"[WARN] Supabase client init failed: Invalid API key from {supabase_key_source}. "
+                    "Use an active project key (prefer SUPABASE_SECRET_KEY for server use). "
+                    "Upload features will be disabled."
+                )
+            else:
+                print(f"[WARN] Supabase client init failed: {e}. Upload features will be disabled.")
+elif supabase_url and not supabase_key:
+    print(
+        "[WARN] SUPABASE_URL is set but no API key was found. "
+        "Set SUPABASE_SECRET_KEY (preferred), SUPABASE_SERVICE_ROLE_KEY, SUPABASE_PUBLISHABLE_KEY, SUPABASE_ANON_KEY, or SUPABASE_KEY. "
+        "Upload features will be disabled."
+    )
+
+def normalize_and_validate_db_url(raw_url):
+    db_url = (raw_url or "").strip()
+    if not db_url:
+        raise RuntimeError("Missing SUPABASE_DB_URL (or DATABASE_URL) for Supabase Postgres connection.")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+    db_placeholders = (
+        "[your",
+        "your-",
+        "example",
+        "<project-ref>",
+        "<db-password>",
+        "[your-password]",
+    )
+    if any(token in db_url.lower() for token in db_placeholders):
+        raise RuntimeError(
+            "SUPABASE_DB_URL still contains placeholder values. "
+            "Set a real Supabase Postgres URI in your .env file before starting the app."
+        )
+
+    parsed = urlparse(db_url)
+    if parsed.scheme not in ("postgresql", "postgres") or not parsed.hostname:
+        raise RuntimeError(
+            "SUPABASE_DB_URL is not a valid Postgres URI. "
+            "Expected format: postgresql://USER:PASSWORD@HOST:PORT/DBNAME"
+        )
+
+    username = unquote(parsed.username or "")
+    password = unquote(parsed.password or "")
+    if not username:
+        raise RuntimeError("SUPABASE_DB_URL is missing the DB username.")
+    if not password:
+        raise RuntimeError("SUPABASE_DB_URL is missing the DB password.")
+
+    return db_url
 
 
-remote_db = os.environ.get('DATABASE_URL')
-if remote_db:
-    if remote_db.startswith("postgres://"):
-        remote_db = remote_db.replace("postgres://", "postgresql://", 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = remote_db
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:@localhost/pet_adoption"
+supabase_db_url = normalize_and_validate_db_url(
+    os.environ.get("SUPABASE_DB_URL") or os.environ.get("DATABASE_URL")
+)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = supabase_db_url
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
-# 3. Now the functions can use the 'supabase' variable safely
-def save_upload(file):
-    if not supabase:
-        return None, "Supabase client not initialized."
-
-if supabase_url and supabase_key:
-    supabase_client = create_client(supabase_url, supabase_key)
-
-
 
 
 oauth = OAuth(app)
@@ -71,8 +164,6 @@ os.makedirs(upload_dir, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = upload_dir
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
-
-db = SQLAlchemy(app)
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -184,16 +275,19 @@ def log_action(action_text):
         db.session.commit()
 
 def save_upload(file):
+    if not supabase:
+        return None, "Supabase client not initialized."
     if not file or file.filename == "": return None, "No file selected."
     filename = secure_filename(file.filename)
     unique_name = f"{uuid4().hex}_{filename}"
-    
-    # Upload directly to Supabase Storage instead of local folder
-    file_content = file.read()
-    supabase.storage.from_('pet-assets').upload(unique_name, file_content)
-    
-    # Return the public URL instead of just the filename
-    return supabase.storage.from_('pet-assets').get_public_url(unique_name), None
+
+    try:
+        # Upload directly to Supabase Storage instead of local folder.
+        file_content = file.read()
+        supabase.storage.from_(SUPABASE_STORAGE_BUCKET).upload(unique_name, file_content)
+        return supabase.storage.from_(SUPABASE_STORAGE_BUCKET).get_public_url(unique_name), None
+    except Exception as e:
+        return None, f"Upload failed for bucket '{SUPABASE_STORAGE_BUCKET}': {e}"
 
 def is_authentic_email(email):
     return re.fullmatch(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email or "")
@@ -207,17 +301,106 @@ def is_valid_username(u, max_len=50):
 def is_strong_password(p, min_len=8):
     return p and len(p) >= min_len
 
+
+def ensure_table_columns(table_name, column_definitions):
+    """Backfill columns added after initial deployments when migrations were not used."""
+    inspector = inspect(db.engine)
+    existing_columns = {col["name"] for col in inspector.get_columns(table_name)}
+    statements = []
+    added_columns = []
+    dialect_name = db.engine.dialect.name
+    identifier_preparer = db.engine.dialect.identifier_preparer
+    quoted_table_name = identifier_preparer.quote(table_name)
+
+    for column_name, sql_type in column_definitions.items():
+        if column_name in existing_columns:
+            continue
+        added_columns.append(column_name)
+        quoted_column_name = identifier_preparer.quote(column_name)
+        if dialect_name == "postgresql":
+            statements.append(
+                f"ALTER TABLE {quoted_table_name} "
+                f"ADD COLUMN IF NOT EXISTS {quoted_column_name} {sql_type}"
+            )
+        else:
+            statements.append(
+                f"ALTER TABLE {quoted_table_name} "
+                f"ADD COLUMN {quoted_column_name} {sql_type}"
+            )
+
+    if not statements:
+        return
+
+    with db.engine.begin() as conn:
+        for statement in statements:
+            conn.execute(text(statement))
+
+    print(f"[INFO] Added missing {table_name} columns: {', '.join(added_columns)}")
+
+
+def ensure_legacy_schema_columns():
+    ensure_table_columns(
+        "pet",
+        {
+            "adopter_id": "INTEGER",
+            "adoption_date": "TIMESTAMP NULL",
+        },
+    )
+    ensure_table_columns(
+        "adoption_application",
+        {
+            "admin_remarks": "TEXT",
+        },
+    )
+    ensure_table_columns(
+        "user",
+        {
+            "phone_number": "VARCHAR(20)",
+            "home_address": "VARCHAR(200)",
+            "created_at": "TIMESTAMP NULL",
+        },
+    )
+
 with app.app_context():
-    db.create_all() 
-    admin_exists = db.session.execute(select(AdminUser).filter_by(username="admin")).scalar()
-    if not admin_exists:
-        db.session.add(AdminUser(
-            username="admin", 
-            password_hash=generate_password_hash("password123"), 
-            force_password_change=True, 
-            is_default=True
-        ))
-        db.session.commit()
+    try:
+        db.create_all()
+        ensure_legacy_schema_columns()
+        admin_exists = db.session.execute(select(AdminUser).filter_by(username="admin")).scalar()
+        if not admin_exists:
+            db.session.add(AdminUser(
+                username="admin", 
+                password_hash=generate_password_hash("password123"), 
+                force_password_change=True, 
+                is_default=True
+            ))
+            db.session.commit()
+    except OperationalError as e:
+        db_host = urlparse(supabase_db_url).hostname or "unknown host"
+        err_text = str(getattr(e, "orig", e)).lower()
+
+        if (
+            "authentication failed" in err_text
+            or "too many authentication errors" in err_text
+            or "circuit breaker open" in err_text
+        ):
+            raise RuntimeError(
+                f"Supabase rejected DB credentials for host '{db_host}'. "
+                "Verify DB username/password in SUPABASE_DB_URL. "
+                "For pooler (:6543), username is typically 'postgres.<project-ref>'; "
+                "for direct DB (:5432), username is typically 'postgres'. "
+                "If many bad logins were attempted, wait 1-2 minutes for the pooler circuit breaker to reset."
+            ) from e
+
+        if "could not translate host name" in err_text:
+            raise RuntimeError(
+                f"Could not resolve Supabase Postgres host '{db_host}'. "
+                "Check project ref in SUPABASE_DB_URL and your DNS/network settings."
+            ) from e
+
+        raise RuntimeError(
+            f"Could not connect to Supabase Postgres host '{db_host}'. "
+            "Check SUPABASE_DB_URL, DB credentials, internet connection, and DNS/network settings."
+        ) from e
 
 @app.route('/')
 def index():
@@ -433,9 +616,6 @@ def edit_pet(pet_id):
         if file and file.filename != '':
             new_img, err = save_upload(file)
             if not err:
-                if pet.photo: 
-                    try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], pet.photo))
-                    except: pass
                 pet.photo = new_img
         db.session.commit()
         log_action(f"Updated profile for: {pet.name}")
@@ -449,9 +629,6 @@ def delete_pet(pet_id):
     if not get_current_admin(): return redirect(url_for('admin_login'))
     pet = Pet.query.get_or_404(pet_id)
     pet_name = pet.name
-    if pet.photo:
-        try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], pet.photo))
-        except: pass
     db.session.delete(pet)
     db.session.commit()
     log_action(f"Permanently removed pet: {pet_name}")

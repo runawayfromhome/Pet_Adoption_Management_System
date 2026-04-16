@@ -1,0 +1,15 @@
+# Example environment variables for local development
+# Copy this to .env and fill in your own values.
+
+SUPABASE_URL=https://your-supabase-project.supabase.co
+SUPABASE_KEY=your-supabase-key
+SUPABASE_DB_URL=postgresql://postgres:[YOUR-PASSWORD]@db.etnbnbrzwhzptbeewrwi.supabase.co:5432/postgres
+# Optional legacy alias supported by the app:
+# DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.etnbnbrzwhzptbeewrwi.supabase.co:5432/postgres
+
+SECRET_KEY=your-secret-key
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
+MAIL_USERNAME=your-email@example.com
+MAIL_PASSWORD=your-email-password
+MAIL_DEFAULT_SENDER=office@petadopt.ph
