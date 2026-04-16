@@ -11,6 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from jinja2 import FileSystemLoader
 from sqlalchemy import select, inspect, text
 from sqlalchemy.exc import OperationalError
 from authlib.integrations.flask_client import OAuth
@@ -20,7 +21,25 @@ from supabase import create_client
 load_dotenv() 
 os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-app = Flask(__name__)
+current_dir = os.path.abspath(os.path.dirname(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, os.pardir))
+
+template_dirs = [
+    os.path.join(current_dir, "templates"),
+    os.path.join(project_root, "templates"),
+]
+template_dirs = [path for path in template_dirs if os.path.isdir(path)]
+
+static_candidates = [
+    os.path.join(current_dir, "static"),
+    os.path.join(project_root, "static"),
+]
+static_dir = next((path for path in static_candidates if os.path.isdir(path)), static_candidates[0])
+
+app = Flask(__name__, template_folder=template_dirs[0] if template_dirs else "templates", static_folder=static_dir)
+if template_dirs:
+    app.jinja_loader = FileSystemLoader(template_dirs)
+
 app.secret_key = os.environ.get("SECRET_KEY", "petadopt_secret_2026_key")
 
 
