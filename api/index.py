@@ -20,6 +20,8 @@ from supabase import create_client
 
 load_dotenv() 
 os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
+IS_VERCEL = os.environ.get('VERCEL') == '1'
+RUN_STARTUP_SCHEMA_SYNC = os.environ.get('RUN_STARTUP_SCHEMA_SYNC', '0' if IS_VERCEL else '1') == '1'
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -178,8 +180,15 @@ google = oauth.register(
     client_kwargs={'scope': 'openid email profile'},
 )
 
-upload_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
-os.makedirs(upload_dir, exist_ok=True)
+upload_dir = '/tmp/petadopt_uploads' if IS_VERCEL else os.path.join(
+    os.path.abspath(os.path.dirname(__file__)),
+    'static',
+    'uploads'
+)
+try:
+    os.makedirs(upload_dir, exist_ok=True)
+except OSError as e:
+    print(f"[WARN] Could not create upload directory '{upload_dir}': {e}")
 app.config['UPLOAD_FOLDER'] = upload_dir
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
@@ -382,17 +391,21 @@ def ensure_legacy_schema_columns():
 
 with app.app_context():
     try:
-        db.create_all()
-        ensure_legacy_schema_columns()
-        admin_exists = db.session.execute(select(AdminUser).filter_by(username="admin")).scalar()
-        if not admin_exists:
-            db.session.add(AdminUser(
-                username="admin", 
-                password_hash=generate_password_hash("password123"), 
-                force_password_change=True, 
-                is_default=True
-            ))
-            db.session.commit()
+        if RUN_STARTUP_SCHEMA_SYNC:
+            db.create_all()
+            ensure_legacy_schema_columns()
+            admin_exists = db.session.execute(select(AdminUser).filter_by(username="admin")).scalar()
+            if not admin_exists:
+                db.session.add(AdminUser(
+                    username="admin", 
+                    password_hash=generate_password_hash("password123"), 
+                    force_password_change=True, 
+                    is_default=True
+                ))
+                db.session.commit()
+        else:
+            # On serverless deployments, skip schema mutations and only verify connectivity.
+            db.session.execute(text("SELECT 1"))
     except OperationalError as e:
         db_host = urlparse(supabase_db_url).hostname or "unknown host"
         err_text = str(getattr(e, "orig", e)).lower()

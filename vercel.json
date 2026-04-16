@@ -6,7 +6,11 @@
       "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
-        "includeFiles": "api/**"
+        "includeFiles": [
+          "api/**",
+          "templates/**",
+          "static/**"
+        ]
       }
     }
   ],
